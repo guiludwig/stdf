@@ -25,6 +25,7 @@ dlogProfile <- function(theta, DTR, NoiTR, XTR, Phi.est, lamb.est){
   # Log of the determinant of U.
   prof <- c(theta1, theta2, sigma2)
   return(prof)
+  # This is a test
 }
 # system.time({dlogProfile(theta0, DTR = DTR, NoiTR = NoiTR, XTR = XTR, Phi.est = Phi.est, lamb.est = lamb.est)})
 # OLD: 0.705
