@@ -11,6 +11,7 @@ using namespace Rcpp;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::ArrayXd;
+// using Eigen::Lower;
 
 // [[Rcpp::depends(RcppEigen)]]
 // [[Rcpp::export]]
@@ -24,30 +25,24 @@ double logProfileCpp(const VectorXd theta, const MatrixXd DTR, const VectorXd Y,
    PhiTime: N x J
    LambEst: (J-1) x 1
   
-   removed arg: const MatrixXd&NoiTR,
-     pass NoiTR[,1] to it
-   removed arg: const VectorXd& PhiEst, 
-     pass Phi.est[NoiTR[,2]] to it
-     
    More about eigen: http://home.uchicago.edu/~skrainka/pdfs/Talk.Eigen.pdf
    
      */
   int N = Y.size();
   int J = LambEst.size();
-  MatrixXd psi; // Dynamic size means: not known at compilation time.
-  psi.setZero(N,N);
+  MatrixXd psi(MatrixXd(N,N).setZero()); // Dynamic size means: not known at compilation time.
   for(int j = 0; j < J; j++){ 
-    psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).transpose());
+    psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
   }
   psi += theta(J)*MatrixXd::Identity(N,N); // theta has J+1 elements
-  MatrixXd U = psi.llt().matrixL().transpose(); // same as chol(psi) in R
+  MatrixXd U = psi.llt().matrixL().adjoint(); // same as chol(psi) in R
   // This step finds beta by Generalized Least Squares
   MatrixXd SX = psi.llt().solve(XTR); // A\b by Cholesky's decomposition
   VectorXd beta = ((XTR.adjoint())*SX).ldlt().solve((SX.adjoint())*Y);
   // End GLS
   VectorXd resid = Y - XTR*beta;
-  double quadForm = (resid.transpose())*(psi.ldlt().solve(resid));
-  double logUdet = U.diagonal().array().sum().log();
+  double quadForm = (resid.adjoint())*(psi.ldlt().solve(resid));
+  double logUdet = U.array().log().diagonal().sum();
   return(quadForm/2 + logUdet + N/2);
 }
 
