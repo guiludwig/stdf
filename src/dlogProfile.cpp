@@ -12,10 +12,11 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::ArrayXd;
 
+//' @export
 // [[Rcpp::depends(RcppEigen)]]
 // [[Rcpp::export]]
-VectorXd dlogProfileCpp(const VectorXd theta, const MatrixXd DTR, const VectorXd Y, 
-                        const MatrixXd XTR, const MatrixXd PhiTime, const VectorXd LambEst) {
+Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR, const Eigen::VectorXd Y, 
+                        const Eigen::MatrixXd XTR, const Eigen::MatrixXd PhiTime, const Eigen::VectorXd LambEst) {
   /* 
    theta: J x 1
    DTR: N x N
@@ -24,9 +25,9 @@ VectorXd dlogProfileCpp(const VectorXd theta, const MatrixXd DTR, const VectorXd
    PhiTime: N x J
    LambEst: (J-1) x 1
   
-   removed arg: const MatrixXd&NoiTR,
+   removed arg: const Eigen::MatrixXd&NoiTR,
      pass NoiTR[,1] to it
-   removed arg: const VectorXd& PhiEst, 
+   removed arg: const Eigen::VectorXd& PhiEst, 
      pass Phi.est[NoiTR[,2]] to it
      
      
@@ -36,27 +37,27 @@ VectorXd dlogProfileCpp(const VectorXd theta, const MatrixXd DTR, const VectorXd
   
   int N = Y.size();
   int J = LambEst.size();
-  MatrixXd psi; // Dynamic size means: not known at compilation time.
+  Eigen::MatrixXd psi; // Dynamic size means: not known at compilation time.
   psi.setZero(N,N);
   for(int j = 0; j < J; j++){ 
     psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).transpose());
   }
-  psi += theta(J)*MatrixXd::Identity(N,N); // theta has J+1 elements
-  MatrixXd U = psi.llt().matrixL().transpose(); // same as chol(psi) in R
+  psi += theta(J)*Eigen::MatrixXd::Identity(N,N); // theta has J+1 elements
+  Eigen::MatrixXd U = psi.llt().matrixL().transpose(); // same as chol(psi) in R
   // This step finds beta by Generalized Least Squares
-  MatrixXd SX = psi.llt().solve(XTR); // A\b by Cholesky's decomposition
-  VectorXd beta = ((XTR.adjoint())*SX).ldlt().solve((SX.adjoint())*Y);
+  Eigen::MatrixXd SX = psi.llt().solve(XTR); // A\b by Cholesky's decomposition
+  Eigen::VectorXd beta = ((XTR.adjoint())*SX).ldlt().solve((SX.adjoint())*Y);
   // End GLS
-  VectorXd resid = Y - XTR*beta;
+  Eigen::VectorXd resid = Y - XTR*beta;
   
   // Difference to logProfile() starts here 
   
-  VectorXd sigmaRes =  psi.llt().solve(resid);
-  MatrixXd psij;
-  VectorXd dTheta;
+  Eigen::VectorXd sigmaRes =  psi.llt().solve(resid);
+  Eigen::MatrixXd psij;
+  Eigen::VectorXd dTheta;
   dTheta.resize(J+1);
   
-  SelfAdjointEigenSolver<MatrixXd> eig;
+  Eigen::SelfAdjointEigenSolver<MatrixXd> eig;
   
   for(int j = 0; j < J; j++){
     psij = DTR.cwiseProduct((LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix())).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).transpose()))/(theta(j)*theta(j)); // if using c = 1/theta, then -1

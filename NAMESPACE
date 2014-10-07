@@ -1,0 +1,6 @@
+useDynLib(gfda)
+exportPattern("^[[:alpha:]]+")
+import(splines)
+import(fda)
+import(RcppEigen)
+importFrom(Rcpp, evalCpp)

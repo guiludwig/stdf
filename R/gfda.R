@@ -1,4 +1,31 @@
-doMath <- function(NoiTR, NoiTE, testset, trainset, ssensors=6, verbose=TRUE){
+#' GFDA model
+#' 
+#' This function is an wrapper to fitting a Geostatistical Functional Data 
+#' Analysis (GFDA) model to spatio-temporal data.
+#'
+#' @param sensor A spatio-temporal data model with vertical 
+#' @param formula A formula estabilishing the linear relationship component for spatial mean
+#' @param SENSORS How many sensors in the dataset (To be removed)
+#' @param J Number of eigenfunctions in spatio-temporal covariance, defaults to 2
+#' @param method The fitting method, defaults to "FT" (fixed time), also allows "GFD" and "SPTLM", which implement the GFDA model (so far they're equivalent)
+#' @param grid A choice of grid to evaluate the Noise Map. Defaults to NULL, which produces no noise map evaluation
+#'
+#' @export
+#' @return List of two items 
+#'   \item{fit}{Fitted values at the original locations}
+#'   \item{noiseMap}{Estimated noise map}
+#'
+#' @examples
+#' mean(rnorm(20))
+#' 
+#' @references
+#'  \url{http://www.google.com}
+#'
+#' @seealso \code{\link{median}},
+#'   \code{\link{mean}}
+#' @keywords Spatial Statistics
+#' @keywords Functional Data Analysis
+gfda <- function(NoiTR, NoiTE, testset, trainset, ssensors=6, verbose=TRUE){
   
   NoiS <- matrix(NoiTR[trainset, 1], ncol=ssensors) #!# IMPORTANT
   
@@ -6,7 +33,7 @@ doMath <- function(NoiTR, NoiTE, testset, trainset, ssensors=6, verbose=TRUE){
   nTS <- dim(NoiTE)[1]
   nT <- nTR + nTS
   
-  SpT <- bs(1:dim(NoiS)[1]) #!# Can insert knots here
+  SpT <- splines::bs(1:dim(NoiS)[1]) #!# Can insert knots here
   XTR <- cbind(1,NoiTR[,3:4],SpT[NoiTR[,2],]) #!# Gui: XTR=cbind(1,NoiTR$X, NoiTR$Y, SpT[NoiTR[,2],])
   YTR <- NoiTR[,1] #!# Gui: YTR=NoiTR$Leq
   
@@ -26,7 +53,7 @@ doMath <- function(NoiTR, NoiTE, testset, trainset, ssensors=6, verbose=TRUE){
   # -c(trainset[1:round(.1*length(trainset))])
   t.pred <- t.fit <- unique(NoiTR[,2]/(diff(range(NoiTR[,2]))+2))  # (1:nT)[-teststa]/(nT+1)
   # t.pred <- NoiTE[,2]/(diff(range(NoiTE[,2]))+2) # teststa/(nT+1)
-  Step2 <- myfpca(NoiStDe, J, t.fit, t.pred, 20) #!# based on Ramsay's ANOVA PCA
+  Step2 <- tfpca(NoiStDe, J, t.fit, t.pred, 20) #!# based on Ramsay's ANOVA PCA
   lamb.est <- Step2$values
   Phi.est <- matrix(0,nT,2)
   Phi.est <- Phi.TR <- Phi.TE <- Step2$vectors
