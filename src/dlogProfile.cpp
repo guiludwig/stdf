@@ -52,7 +52,7 @@ Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixX
   
   // Difference to logProfile() starts here 
   
-  Eigen::VectorXd sigmaRes =  psi.llt().solve(resid);
+  Eigen::VectorXd sigmaRes = psi.llt().solve(resid);
   Eigen::MatrixXd psij;
   Eigen::VectorXd dTheta;
   dTheta.resize(J+1);

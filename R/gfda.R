@@ -3,17 +3,19 @@
 #' This function is an wrapper to fitting a Geostatistical Functional Data 
 #' Analysis (GFDA) model to spatio-temporal data.
 #'
-#' @param sensor A spatio-temporal data model with vertical 
-#' @param formula A formula estabilishing the linear relationship component for spatial mean
-#' @param SENSORS How many sensors in the dataset (To be removed)
-#' @param J Number of eigenfunctions in spatio-temporal covariance, defaults to 2
-#' @param method The fitting method, defaults to "FT" (fixed time), also allows "GFD" and "SPTLM", which implement the GFDA model (so far they're equivalent)
-#' @param grid A choice of grid to evaluate the Noise Map. Defaults to NULL, which produces no noise map evaluation
+#' @param NoiTR A spatio-temporal data model with vertical alignment (TODO: Generalize)
+#' @param NoiTE A spatio-temporal data model with vertical alignment, prediction set (TODO: Generalize)
+#' @param ssensors How many sensors in the dataset (To be removed)
+#' @param J Number of eigenfunctions in spatio-temporal covariance, defaults to 2 (TODO: implement)
+#' @param testset TODO
+#' @param trainset TODO
 #'
 #' @export
-#' @return List of two items 
-#'   \item{fit}{Fitted values at the original locations}
-#'   \item{noiseMap}{Estimated noise map}
+#' @return List of four items 
+#'   \item{beta.est}{Coefficient estimates}
+#'   \item{fitted.values}{TODO}
+#'   \item{MSPEKrig}{Mean squared Kriging Prediction error}
+#'   \item{Cov.matrix}{TODO}
 #'
 #' @examples
 #' mean(rnorm(20))

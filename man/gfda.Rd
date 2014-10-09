@@ -6,22 +6,24 @@
 gfda(NoiTR, NoiTE, testset, trainset, ssensors = 6, verbose = TRUE)
 }
 \arguments{
-\item{sensor}{A spatio-temporal data model with vertical}
+\item{NoiTR}{A spatio-temporal data model with vertical alignment (TODO: Generalize)}
 
-\item{formula}{A formula estabilishing the linear relationship component for spatial mean}
+\item{NoiTE}{A spatio-temporal data model with vertical alignment, prediction set (TODO: Generalize)}
 
-\item{SENSORS}{How many sensors in the dataset (To be removed)}
+\item{testset}{TODO}
 
-\item{J}{Number of eigenfunctions in spatio-temporal covariance, defaults to 2}
+\item{trainset}{TODO}
 
-\item{method}{The fitting method, defaults to "FT" (fixed time), also allows "GFD" and "SPTLM", which implement the GFDA model (so far they're equivalent)}
+\item{ssensors}{How many sensors in the dataset (To be removed)}
 
-\item{grid}{A choice of grid to evaluate the Noise Map. Defaults to NULL, which produces no noise map evaluation}
+\item{J}{Number of eigenfunctions in spatio-temporal covariance, defaults to 2 (TODO: implement)}
 }
 \value{
-List of two items
-  \item{fit}{Fitted values at the original locations}
-  \item{noiseMap}{Estimated noise map}
+List of four items
+  \item{beta.est}{Coefficient estimates}
+  \item{fitted.values}{TODO}
+  \item{MSPEKrig}{Mean squared Kriging Prediction error}
+  \item{Cov.matrix}{TODO}
 }
 \description{
 This function is an wrapper to fitting a Geostatistical Functional Data
