@@ -18,6 +18,9 @@
 #'   \item{Cov.matrix}{TODO}
 #'
 #' @examples
+#' require(fda)
+#' Y <- CanadianWeather$dailyAv
+#' XY <- CanadianWeather$coordinates
 #' mean(rnorm(20))
 #' 
 #' @references
@@ -78,9 +81,9 @@ gfda <- function(NoiTR, NoiTE, testset, trainset, ssensors=6, verbose=TRUE){
   
   # Constraint: ui %*% theta - ci >= 0 
   # system.time({log.profile(theta0, DTR = DTR, NoiTR = NoiTR, XTR = XTR, Phi.est = Phi.est, lamb.est = lamb.est)})
-  prof.max <- constrOptim(theta0, logProfileCpp, grad = NULL,
+  prof.max <- constrOptim(theta0, logProfileCpp, grad = dlogProfileCpp,
                           ui = cbind(c(1,0,0,-1,0,0),c(0,1,0,0,-1,0), c(0,0,1,0,0,-1)), 
-                          ci = c(0.001, 0.0001, 0.001, -Dmax, -Dmax, -Vmax), 
+                          ci = c(0.001, 0.001, 0.001, -Dmax, -Dmax, -Vmax), 
                           DTR = DTR, Y = NoiTR[,1], XTR = XTR, 
                           PhiTime = Phi.est[NoiTR[,2],], LambEst = lamb.est)
   
