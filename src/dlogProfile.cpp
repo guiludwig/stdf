@@ -52,7 +52,7 @@ Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixX
   
   // Difference to logProfile() starts here 
   
-  Eigen::VectorXd sigmaRes = psi.llt().solve(resid);
+  Eigen::VectorXd sigmaRes = psi.ldlt().solve(resid);
   Eigen::MatrixXd psij;
   Eigen::VectorXd dTheta;
   dTheta.resize(J+1);
@@ -61,10 +61,9 @@ Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixX
   
   for(int j = 0; j < J; j++){
     psij = DTR.cwiseProduct((LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix())).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).transpose()))/(theta(j)*theta(j)); // if using c = 1/theta, then -1
-    dTheta(j) = -1*(sigmaRes.transpose())*psij*sigmaRes + (psi.llt().solve(psij)).diagonal().array().sum();
-    dTheta(j) = (psi.llt().solve(psij)).diagonal().array().sum();
+    dTheta(j) = -1*(sigmaRes.adjoint())*psij*sigmaRes + (psi.ldlt().solve(psij)).diagonal().array().sum();
   }
-  dTheta(J) = -1*(sigmaRes.transpose())*sigmaRes + eig.compute(psi).eigenvalues().array().pow(-1).sum();
+  dTheta(J) = -1*(sigmaRes.adjoint())*sigmaRes + eig.compute(psi).eigenvalues().array().pow(-1).sum();
   
   return(dTheta);
 }
