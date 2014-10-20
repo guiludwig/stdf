@@ -112,6 +112,7 @@ gfda <- function(NoiTR, NoiTE, testset, trainset, ssensors=6, verbose=TRUE){
     DKrig[i,] <- sqrt((NoiTR[i,3] - NoiTE[,3])^2 + (NoiTR[i,4] - NoiTE[,4])^2)
   }
   
+  # WRITE EVALUATOR HERE!
   PhiTimeTE <- Phi.est[NoiTE[,2],]
   Gamma1TE <- lamb.est[1]*exp(-DKrig/theta[1])
   Gamma2TE <- lamb.est[2]*exp(-DKrig/theta[2])

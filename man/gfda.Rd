@@ -30,6 +30,9 @@ This function is an wrapper to fitting a Geostatistical Functional Data
 Analysis (GFDA) model to spatio-temporal data.
 }
 \examples{
+require(fda)
+Y <- CanadianWeather$dailyAv
+XY <- CanadianWeather$coordinates
 mean(rnorm(20))
 }
 \references{

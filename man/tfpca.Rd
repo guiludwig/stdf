@@ -3,7 +3,7 @@
 \alias{tfpca}
 \title{Temporal Functional Principal Component}
 \usage{
-tfpca(MatY, J, t.fit, t.pred, tbas)
+tfpca(MatY, J, t.fit, t.pred, tbas = 10)
 }
 \arguments{
 \item{MatY}{The data organized in a matrix, with each time series in a column. Missing
@@ -26,17 +26,21 @@ List of three items
 \description{
 This function is used on step II of the GFDA algorithm by Chu, Zhu and Wang (2014). It does
 not need to be used directly, since it's mostly an wrapper to function calls from J. O. Ramsay
-et al.'s \code{fda} package function calls.
+et al.'s \code{fda} package function calls. It behaves similarly to the \code{pca.fd} function,
+but rescales the eigenfunctions/eigenvalues to a scale that's needed by the \code{gfda} function.
 }
 \examples{
-mean(rnorm(20)) # Write some test cases!
+# This example uses fda's CanadianWeather dataset:
+test <- tfpca(CanadianWeather$dailyAv[,,"Temperature.C"], 2, 1:365, 32:60, 20)
+layout(matrix(1:2, ncol=2))
+plot(test[,1], type="l", main="First Principal Component")
+plot(test[,2], type="l", main="Second Principal Component")
 }
 \references{
-Ramsay, J. O. and Silverman, B. (2005) Functional Data Analysis. New York: Springer.
+Ramsay, J. O. (2006) Functional Data Analysis. New York: Springer.
 }
 \seealso{
-\code{\link{median}},
-  \code{\link{mean}}
+\code{\link{pca.fd}}, \code{\link{gfda}}
 }
 \keyword{Analysis}
 \keyword{Data}
