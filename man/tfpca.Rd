@@ -31,10 +31,11 @@ but rescales the eigenfunctions/eigenvalues to a scale that's needed by the \cod
 }
 \examples{
 # This example uses fda's CanadianWeather dataset:
+library(fda)
 test <- tfpca(CanadianWeather$dailyAv[,,"Temperature.C"], 2, 1:365, 32:60, 20)
 layout(matrix(1:2, ncol=2))
-plot(test[,1], type="l", main="First Principal Component")
-plot(test[,2], type="l", main="Second Principal Component")
+plot(test$vectors[,1], type="l", main="First Principal Component")
+plot(test$vectors[,2], type="l", main="Second Principal Component")
 }
 \references{
 Ramsay, J. O. (2006) Functional Data Analysis. New York: Springer.

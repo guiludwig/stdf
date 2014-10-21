@@ -6,9 +6,8 @@
 #' @param NoiTR A spatio-temporal data model with vertical alignment (TODO: Generalize)
 #' @param NoiTE A spatio-temporal data model with vertical alignment, prediction set (TODO: Generalize)
 #' @param ssensors How many sensors in the dataset (To be removed)
+#' @param verbose Wheter \code{gfda} gives detailed information, defaults to \code{TRUE}
 #' @param J Number of eigenfunctions in spatio-temporal covariance, defaults to 2 (TODO: implement)
-#' @param testset TODO
-#' @param trainset TODO
 #'
 #' @export
 #' @return List of four items 
@@ -30,9 +29,13 @@
 #'   \code{\link{mean}}
 #' @keywords Spatial Statistics
 #' @keywords Functional Data Analysis
-gfda <- function(NoiTR, NoiTE, testset, trainset, ssensors=6, verbose=TRUE){
+gfda <- function(NoiTR, NoiTE, ssensors=6, verbose=TRUE){
   
-  NoiS <- matrix(NoiTR[trainset, 1], ncol=ssensors) #!# IMPORTANT
+  # NEEDS TO TAKE GENERIC TIME!!
+  # ssensors might be useless! They do not have the same # of observations.
+  
+  NoiS <- matrix(NoiTR[, 1], ncol=ssensors) #!# IMPORTANT
+  # Get by sensor name, much better! But not necessarily matrix
   
   nTR <- dim(NoiTR)[1]  
   nTS <- dim(NoiTE)[1]
@@ -48,21 +51,14 @@ gfda <- function(NoiTR, NoiTE, testset, trainset, ssensors=6, verbose=TRUE){
   
   nT <- dim(NoiS)[1]
   nSt <- dim(NoiS)[2]
-  # teststa <- NoiTR[trainset[1:round(.1*length(trainset))],2]
-  # SOMETHING WRONG HERE
-  # Has Detrended data per column
-  # NoiStDe <- matrix(NoiTRDe[1:(nSt*(nT-length(teststa))),1],ncol=nSt)
-  NoiStDe <- matrix(NoiTRDe[trainset, 1], ncol=ssensors) #!# IMPORTANT
+  NoiStDe <- matrix(NoiTRDe[, 1], ncol=ssensors) #!# IMPORTANT
   
-  J <- 2 # trainset[1:round(.1*length(trainset))]
-  # -c(trainset[1:round(.1*length(trainset))])
-  t.pred <- t.fit <- unique(NoiTR[,2]/(diff(range(NoiTR[,2]))+2))  # (1:nT)[-teststa]/(nT+1)
-  # t.pred <- NoiTE[,2]/(diff(range(NoiTE[,2]))+2) # teststa/(nT+1)
-  Step2 <- tfpca(NoiStDe, J, t.fit, t.pred, 20) #!# based on Ramsay's ANOVA PCA
+  J <- 2
+  t.pred <- t.fit <- unique(NoiTR[,2]/(diff(range(NoiTR[,2]))+2))
+  Step2 <- tfpca(NoiStDe, J, t.fit, t.pred, 20)
   lamb.est <- Step2$values
   Phi.est <- matrix(0,nT,2)
   Phi.est <- Phi.TR <- Phi.TE <- Step2$vectors
-  #Phi.est[teststa,] <- Step2$pred.vec
   
   ##################################
   # Step3:   Spatial Parameters    #
@@ -106,7 +102,7 @@ gfda <- function(NoiTR, NoiTE, testset, trainset, ssensors=6, verbose=TRUE){
   
   # Starts Kriging, note it does extrapolation!
   
-  DKrig <- psi.krig <- matrix(0, nrow = nTR, ncol = length(testset))        
+  DKrig <- psi.krig <- matrix(0, nrow = nTR, ncol = nTS)        
   
   for(i in 1:nTR) {
     DKrig[i,] <- sqrt((NoiTR[i,3] - NoiTE[,3])^2 + (NoiTR[i,4] - NoiTE[,4])^2)

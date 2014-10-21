@@ -3,18 +3,16 @@
 \alias{gfda}
 \title{GFDA model}
 \usage{
-gfda(NoiTR, NoiTE, testset, trainset, ssensors = 6, verbose = TRUE)
+gfda(NoiTR, NoiTE, ssensors = 6, verbose = TRUE)
 }
 \arguments{
 \item{NoiTR}{A spatio-temporal data model with vertical alignment (TODO: Generalize)}
 
 \item{NoiTE}{A spatio-temporal data model with vertical alignment, prediction set (TODO: Generalize)}
 
-\item{testset}{TODO}
-
-\item{trainset}{TODO}
-
 \item{ssensors}{How many sensors in the dataset (To be removed)}
+
+\item{verbose}{Wheter \code{gfda} gives detailed information, defaults to \code{TRUE}}
 
 \item{J}{Number of eigenfunctions in spatio-temporal covariance, defaults to 2 (TODO: implement)}
 }
