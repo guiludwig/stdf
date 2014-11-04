@@ -4,6 +4,9 @@
 #' not need to be used directly, since it's mostly an wrapper to function calls from J. O. Ramsay 
 #' et al.'s \code{fda} package function calls. It behaves similarly to the \code{pca.fd} function, 
 #' but rescales the eigenfunctions/eigenvalues to a scale that's needed by the \code{gfda} function.
+#' Notice \code{tfpca} do not handle NA's in the data values. It might be useful do to some
+#' kind of nearest neightbor imputation if possible. The \code{fda} function \code{data2fd} does
+#' a least-squares fit of the basis function, which can be helpful in preprocessing the data.
 #'
 #' @param MatY The data organized in a matrix, with each time series in a column. Missing 
 #' values are currently not handled properly.
