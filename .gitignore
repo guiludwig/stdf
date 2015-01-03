@@ -3,3 +3,12 @@ R/tlogProfile.R
 .Rproj.user*
 .Rproj.user/*
 .Rhistory
+junk/a.out
+junk/Cprofiler.R
+junk/gmon.out
+junk/jj.cxx
+junk/logProfiler.cpp
+.Rproj.user/D9264627/sdb/prop/INDEX
+.Rproj.user/D9264627/pcs/workbench-pane.pper
+*.pper
+*.pper
