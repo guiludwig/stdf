@@ -46,19 +46,16 @@ Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixX
   }
   VectorXd RandNoise = theta(J)*Eigen::VectorXd::Constant(N,1) + (theta(J+1) - theta(J))*subsetStatic;
   psi += RandNoise.asDiagonal(); // theta has J+2 elements
-  Eigen::MatrixXd psiInv = psi.inverse();
-  // Eigen::MatrixXd U = psi.llt().matrixL().adjoint(); // same as chol(psi) in R
+  Eigen::MatrixXd U = psi.llt().matrixL().adjoint(); // same as chol(psi) in R
   // This step finds beta by Generalized Least Squares
-  // Eigen::MatrixXd SX = psi.llt().solve(XTR); // A\b by Cholesky's decomposition
-  // Eigen::VectorXd beta = ((XTR.adjoint())*SX).ldlt().solve((SX.adjoint())*Y);
-  Eigen::VectorXd beta = ((XTR.adjoint())*psiInv*XTR).ldlt().solve((XTR.adjoint())*psiInv*Y);
+  Eigen::MatrixXd SX = psi.llt().solve(XTR); // A\b by Cholesky's decomposition
+  Eigen::VectorXd beta = ((XTR.adjoint())*SX).ldlt().solve((SX.adjoint())*Y);
   // End GLS
   Eigen::VectorXd resid = Y - XTR*beta;
   
   // Difference to logProfile() starts here 
   
-  // Eigen::VectorXd sigmaRes = psi.ldlt().solve(resid);
-  Eigen::VectorXd sigmaRes = psiInv * resid;
+  Eigen::VectorXd sigmaRes = psi.ldlt().solve(resid);
   Eigen::MatrixXd psij = Eigen::MatrixXd::Identity(N, N);
   Eigen::VectorXd dTheta = Eigen::VectorXd::Constant(J+2,0);
   // psij.setZero(N,N);
@@ -66,16 +63,10 @@ Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixX
   
   for(int j = 0; j < J; j++){
     psij = DTR.cwiseProduct((LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix())).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).transpose()))/(theta(j)*theta(j)); // if using c = 1/theta, then -1
-    // dTheta(j) = -1*(sigmaRes.adjoint())*psij*sigmaRes + (psi.ldlt().solve(psij)).diagonal().array().sum();
-    dTheta(j) = -1*(sigmaRes.adjoint())*psij*sigmaRes + (psiInv*psij).trace();
+    dTheta(j) = -1*(sigmaRes.adjoint())*psij*sigmaRes + (psi.ldlt().solve(psij)).diagonal().array().sum();
   }
   // need eig equivalent of which
   int staticObs = (int) subsetStatic.sum();
-  
-  Eigen::VectorXd diagInverse = psiInv.diagonal();
-  double diagS = 0.0;
-  double diagR = 0.0;
-  
   Eigen::VectorXd sigmaResStatic = Eigen::VectorXd::Constant(staticObs,1);
   Eigen::VectorXd sigmaResRoving = Eigen::VectorXd::Constant(N - staticObs,1);
   int wS = 0;
@@ -83,22 +74,76 @@ Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixX
   for(int w = 0; w < N; w++){
     if(subsetStatic(w) == 1) {
       sigmaResStatic(wS) = sigmaRes(w);
-      diagS += diagInverse(w);
       wS++;
     } else {
       sigmaResRoving(wR) = sigmaRes(w);
-      diagR += diagInverse(w);
       wR++;
     }
   }
   
-  // Eigen::SelfAdjointEigenSolver<MatrixXd> eig; // specific routine for symmmetric matrices
-  // Eigen::SelfAdjointEigenSolver<MatrixXd> eig(psi); // specific routine for symmmetric matrices
+  /*
+  /// WRONG! subset of inverse, not inverse of subset
+  Eigen::MatrixXd psiStatic = Eigen::MatrixXd::Identity(staticObs, staticObs);
+  Eigen::MatrixXd psiRoving = Eigen::MatrixXd::Identity(N - staticObs, N - staticObs);
+  wS = 0;
+  wR = 0;
+  int w2;
+  int wScol = 0;
+  int wRcol = 0;
+  for(int w = 0; w < N; w++){
+    if(subsetStatic(w) == 1){
+      for(w2 = 0; w2 < N; w2++){
+        if(subsetStatic(w2) == 1){
+          psiStatic(wS, wScol) = psi(w,w2);
+          wScol++;
+        }
+        wS++;
+      }
+    } else { // subsetStatic(w) == 0
+    for(int w2 = 0; w2 < N; w2++){
+      if(subsetStatic(w2) == 0){
+        psiStatic(wR, wRcol) = psi(w,w2);
+        wRcol++;
+      }
+      wR++;
+    }
+    }
+  }
   
-  // dTheta(J) = -1*(sigmaResStatic.adjoint())*sigmaResStatic + eig.compute(psi.cwiseProduct(whichCells)).eigenvalues().array().pow(-1).sum();
-  // dTheta(J+1) = -1*(sigmaResRoving.adjoint())*sigmaResRoving + eig.compute(psi.cwiseProduct(1-whichCells)).eigenvalues().array().pow(-1).sum();
-  dTheta(J) = -1*(sigmaResStatic.adjoint())*sigmaResStatic + diagS;
-  dTheta(J+1) = -1*(sigmaResRoving.adjoint())*sigmaResRoving + diagR;
+  // STILL WRONG
+  Eigen::MatrixXd whichCells = Eigen::MatrixXd::Constant(N, N, 0.0);
+  wS = 0;
+  wR = 0;
+  int w2;
+  int wSrow = 0;
+  int wRrow = 0;
+  for(int w = 0; w < N; w++){
+    if(subsetStatic(w) == 1){
+      for(w2 = 0; w2 < N; w2++){
+        if(subsetStatic(w2) == 1){
+          whichCells(wSrow, wS) = 1.0;
+          wSrow++;
+        }
+        wS++;
+      }
+    } else { // subsetStatic(w) == 0
+    for(int w2 = 0; w2 < N; w2++){
+      if(subsetStatic(w2) == 0){
+        whichCells(wR, wRrow) = 1.0;
+        wRrow++;
+      }
+      wR++;
+    }
+    }
+  }
+  
+  */
+  
+  // Eigen::SelfAdjointEigenSolver<MatrixXd> eig; // specific routine for symmmetric matrices
+  Eigen::SelfAdjointEigenSolver<MatrixXd> eig(psi); // specific routine for symmmetric matrices
+  
+  dTheta(J) = -1*(sigmaResStatic.adjoint())*sigmaResStatic + eig.compute(psi.cwiseProduct(whichCells)).eigenvalues().array().pow(-1).sum();
+  dTheta(J+1) = -1*(sigmaResRoving.adjoint())*sigmaResRoving + eig.compute(psi.cwiseProduct(1-whichCells)).eigenvalues().array().pow(-1).sum();
   
   return(dTheta);
 }

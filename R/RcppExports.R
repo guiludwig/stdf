@@ -5,6 +5,10 @@ dlogProfileCpp <- function(theta, DTR, Y, XTR, PhiTime, LambEst) {
     .Call('gfda_dlogProfileCpp', PACKAGE = 'gfda', theta, DTR, Y, XTR, PhiTime, LambEst)
 }
 
+dlogProfileCppMOD <- function(theta, DTR, Y, XTR, PhiTime, LambEst) {
+    .Call('gfda_dlogProfileCppMOD', PACKAGE = 'gfda', theta, DTR, Y, XTR, PhiTime, LambEst)
+}
+
 logProfileCpp <- function(theta, DTR, Y, XTR, PhiTime, LambEst) {
     .Call('gfda_logProfileCpp', PACKAGE = 'gfda', theta, DTR, Y, XTR, PhiTime, LambEst)
 }
