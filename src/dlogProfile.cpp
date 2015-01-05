@@ -104,6 +104,6 @@ Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixX
 }
 
 // Test:
+// system.time({dlogProfileCpp(testTheta <- 1:3, testDTR <- matrix(1,420,420), testY <- 1:420, testXTR <- matrix(1,420,6), testSubsetStatic <- rep(c(0,1), each = 210), testPhiTime <- matrix(rep(1:420,2), ncol=2), testLambEst <- 1:2)})
+// replicate(10, system.time({dlogProfileCpp(testTheta <- 1:3, testDTR <- matrix(1,420,420), testY <- 1:420, testXTR <- matrix(1,420,6), testSubsetStatic <- rep(c(0,1), each = 210), testPhiTime <- matrix(rep(1:420,2), ncol=2), testLambEst <- 1:2)})[3])
 // system.time({dlogProfileCpp(theta0, DTR, NoiTR[,1], XTR, Phi.est[NoiTR[,2],], lamb.est)})
-// Compare to
-// system.time({dlogProfile(theta0, DTR, NoiTR, XTR, Phi.est, lamb.est)})

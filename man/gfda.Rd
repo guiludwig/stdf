@@ -4,8 +4,8 @@
 \alias{gfda}
 \title{GFDA model}
 \usage{
-gfda(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
-  rsensors = 2, J = 2, spline.df = NULL, fpca.df = 20, verbose = TRUE)
+gfda(training.set, prediction.set, subtfpca = NULL, ssensors = 6, J = 2,
+  spline.df = NULL, fpca.df = 20, verbose = TRUE, ...)
 }
 \arguments{
 \item{training.set}{A numeric matrix with the response variable in the first column,
@@ -16,8 +16,6 @@ column. Corresponds to the training data.}
 MSPE calculation.}
 
 \item{ssensors}{Integer corresponding to how many static sensors in the dataset.}
-
-\item{rsensors}{Integer corresponding to how many roving sensors in the dataset.}
 
 \item{J}{Number of eigenfunctions in spatio-temporal covariance, defaults to 2.}
 
@@ -40,9 +38,16 @@ This function is an wrapper to fitting a Geostatistical Functional Data
 Analysis (GFDA) model to spatio-temporal data.
 }
 \examples{
-require(fda)
-Y <- CanadianWeather$dailyAv
-XY <- CanadianWeather$coordinates
+## require(fda)
+## Y <- CanadianWeather$dailyAv
+## XY <- CanadianWeather$coordinates
+# static sensor simulation example:
+set.seed(1)
+X <- cbind(rnorm(200), rep(1:50,4), rep(c(2,2,4,4), each = 50), rep(c(2,4,2,4), each = 50))
+Xpred <- cbind(rnorm(50), 1:50, 3, 3)
+results <- gfda(X, Xpred, ssensors = 4)
+X2 <- rbind(X, cbind(rnorm(50), 1:50, seq(2,4, length=50), seq(2,4, length=50)))
+resultsPlusRoving <- gfda(X2, Xpred, subtfpca = c(rep(TRUE,200), rep(FALSE,50)), ssensors = 4)
 }
 \references{
 \url{http://www.google.com}

@@ -12,3 +12,6 @@ junk/logProfiler.cpp
 .Rproj.user/D9264627/pcs/workbench-pane.pper
 *.pper
 *.pper
+*.o
+*.dll
+*.o

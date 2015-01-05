@@ -9,7 +9,6 @@
 #' @param prediction.set Same as training.set, but corresponding to points to be predicted for 
 #'              MSPE calculation.
 #' @param ssensors Integer corresponding to how many static sensors in the dataset.
-#' @param rsensors Integer corresponding to how many roving sensors in the dataset.
 #' @param J Number of eigenfunctions in spatio-temporal covariance, defaults to 2.
 #' @param spline.df Number of spline basis for the deterministic spline component (see \code{\link{bs}} function).
 #' @param fpca.df Number of spline basis for the stochastic spline component (see \code{\link{tfpca}} function).
@@ -32,6 +31,8 @@
 #' X <- cbind(rnorm(200), rep(1:50,4), rep(c(2,2,4,4), each = 50), rep(c(2,4,2,4), each = 50))
 #' Xpred <- cbind(rnorm(50), 1:50, 3, 3)
 #' results <- gfda(X, Xpred, ssensors = 4)
+#' X2 <- rbind(X, cbind(rnorm(50), 1:50, seq(2,4, length=50), seq(2,4, length=50)))
+#' resultsPlusRoving <- gfda(X2, Xpred, subtfpca = c(rep(TRUE,200), rep(FALSE,50)), ssensors = 4)
 #' 
 #' @references
 #'  \url{http://www.google.com}
@@ -39,8 +40,8 @@
 #' @seealso \code{\link{tfpca}}
 #' @keywords Spatial Statistics
 #' @keywords Functional Data Analysis
-gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6, rsensors = 2, 
-                 J = 2, spline.df = NULL, fpca.df = 20, verbose = TRUE){
+gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6, 
+                 J = 2, spline.df = NULL, fpca.df = 20, verbose = TRUE, ...){
   
   # NEEDS TO TAKE GENERIC TIME!!
   # ssensors might be useless! They do not have the same # of observations.
@@ -62,11 +63,11 @@ gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6, rs
     NoiStDe <- matrix(training.set.detrended[, 1], ncol = ssensors) #!# IMPORTANT
     t.pred <- t.fit <- (unique(training.set[ ,2]) - min(training.set[ ,2])) / timerange #  +2 was here
   } else {
-    NoiStDe <- matrix(training.set.detrended[subtfpca, 1], ncol = ssensors-rsensors) #!# IMPORTANT
+    NoiStDe <- matrix(training.set.detrended[subtfpca, 1], ncol = ssensors) #!# IMPORTANT
     t.pred <- t.fit <- (unique(training.set[subtfpca,2]) - min(training.set[subtfpca,2]) )/timerange
   }
   nSt <- length(t.fit)
-  Step2 <- tfpca(NoiStDe, J, t.fit, t.pred, fpca.df) 
+  Step2 <- tfpca(NoiStDe, J, t.fit, t.pred, fpca.df, ...) 
   lamb.est <- Step2$values
   Phi.est <- Phi.TR <- Phi.TE <- Step2$vectors
   
@@ -74,31 +75,38 @@ gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6, rs
   # Step3:   Spatial Parameters    #
   ##################################
   
-  DTR <- matrix(0, nrow = nTR, ncol = nTR)        
+  DTR <- matrix(0, nrow = nTR, ncol = nTR)  
   for(i in 1:nTR) {
     DTR[i, ] <- sqrt((training.set[i,3] - training.set[,3])^2 + (training.set[i,4] - training.set[,4])^2)
   }
   
-  Dmax = max(DTR)
-  Vmax = var(training.set.detrended[,1])
-  theta0 = c(rep(Dmax/2, J), Vmax/2, Vmax/2) # theta_{1:J}, sigma_S, sigma_R
+  Dmax <- max(DTR)
+  Vmax <- var(training.set.detrended[,1])
+  theta0 <- c(rep(Dmax/2, J), Vmax/2, Vmax/2) # theta_{1:J}, sigma_S, sigma_R
   
   if(verbose) cat("Optimizing... \n")
   
   # Constraint: ui %*% theta - ci >= 0 
   # Check: http://eigen.tuxfamily.org/dox/AsciiQuickReference.txt
-  prof.max <- constrOptim(theta0, logProfileCpp, grad = dlogProfileCpp,
-                          ui = cbind(c(1,0,0,0,-1,0,0,0),
-                                     c(0,1,0,0,0,-1,0,0), 
-                                     c(0,0,1,0,0,0,-1,0), 
-                                     c(0,0,0,1,0,0,0,-10)), 
-                          ci = c(0.001, 0.001, 0.001, 0.001, 
-                                 -Dmax, -Dmax, -Vmax, -Vmax), 
+  if(is.null(subtfpca)) {
+    subsetStatic <- rep(1, nTR)
+  } else {
+    subsetStatic <- as.numeric(subtfpca)
+  }
+  
+  UI <- rbind(diag(J+2), -1*diag(J+2))
+  CI <- c(rep(0.001, J+2), rep(-Dmax, J), -Vmax, -Vmax)
+  prof.max <- constrOptim(theta0, logProfileCpp, grad = NULL, # grad = dlogProfileCpp,
+                          ui = UI, ci = CI, # Constraints
                           DTR = DTR, Y = training.set[,1], XTR = XTR, 
-                          PhiTime = Phi.est[training.set[,2],], LambEst = lamb.est)
-  ### CORRECT THIS: Phi.est[training.set[,2],]
-  ### TRY:  Phi.est[match(((prediction.set[ ,2] - min(training.set[ ,2])) / timerange), t.pred), ]
+                          subsetStatic = subsetStatic,
+                          # PhiTime = Phi.est[training.set[,2],], 
+                          PhiTime = Phi.est[match(((training.set[ ,2] - min(training.set[ ,2])) / timerange), t.fit),], 
+                          LambEst = lamb.est)
   theta <- prof.max$par
+  if(is.null(subtfpca)) {
+    theta <- theta[-length(theta)] 
+  }
   
   if(verbose) cat("Optimization done. \n")
   
