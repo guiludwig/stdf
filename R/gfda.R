@@ -105,20 +105,17 @@ gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
     subsetStatic <- as.numeric(subtfpca)
   }
   
-  if(homogeneous){
+  if(!homogeneous){
     prof.max <- constrOptim(theta0, logProfileCpp, grad = NULL, # grad = dlogProfileCpp,
                             ui = UI, ci = CI, # Constraints
                             DTR = DTR, Y = training.set[,1], XTR = XTR, 
                             subsetStatic = subsetStatic,
-                            # PhiTime = Phi.est[training.set[,2],], 
                             PhiTime = Phi.est[match(((training.set[ ,2] - min(training.set[ ,2])) / timerange), t.fit),], 
                             LambEst = lamb.est)
   } else {
     prof.max <- constrOptim(theta0, logProfileCppH, grad = dlogProfileCppH,
                             ui = UI, ci = CI, # Constraints
                             DTR = DTR, Y = training.set[,1], XTR = XTR, 
-                            subsetStatic = subsetStatic,
-                            # PhiTime = Phi.est[training.set[,2],], 
                             PhiTime = Phi.est[match(((training.set[ ,2] - min(training.set[ ,2])) / timerange), t.fit),], 
                             LambEst = lamb.est)
   }
