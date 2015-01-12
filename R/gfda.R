@@ -12,6 +12,7 @@
 #' @param J Number of eigenfunctions in spatio-temporal covariance, defaults to 2.
 #' @param spline.df Number of spline basis for the deterministic spline component (see \code{\link{bs}} function).
 #' @param fpca.df Number of spline basis for the stochastic spline component (see \code{\link{tfpca}} function).
+#' @param homogeneous Whether the variance of static and roving sensors is assumed to be the same or not. Defaults to not.
 #' @param verbose Wheter \code{gfda} gives detailed information on optimization step, defaults to \code{TRUE}.
 #'
 #' @export
@@ -31,6 +32,7 @@
 #' X <- cbind(rnorm(200), rep(1:50,4), rep(c(2,2,4,4), each = 50), rep(c(2,4,2,4), each = 50))
 #' Xpred <- cbind(rnorm(50), 1:50, 3, 3)
 #' results <- gfda(X, Xpred, ssensors = 4)
+#' resultsH <- gfda(X, Xpred, ssensors = 4, homogeneous = TRUE)
 #' X2 <- rbind(X, cbind(rnorm(50), 1:50, seq(2,4, length=50), seq(2,4, length=50)))
 #' resultsPlusRoving <- gfda(X2, Xpred, subtfpca = c(rep(TRUE,200), rep(FALSE,50)), ssensors = 4)
 #' 
@@ -41,7 +43,8 @@
 #' @keywords Spatial Statistics
 #' @keywords Functional Data Analysis
 gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6, 
-                 J = 2, spline.df = NULL, fpca.df = 20, verbose = TRUE, ...){
+                 J = 2, spline.df = NULL, fpca.df = 20, homogeneous = FALSE, 
+                 verbose = TRUE, ...){
   
   # NEEDS TO TAKE GENERIC TIME!!
   # ssensors might be useless! They do not have the same # of observations.
@@ -82,7 +85,15 @@ gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
   
   Dmax <- max(DTR)
   Vmax <- var(training.set.detrended[,1])
-  theta0 <- c(rep(Dmax/2, J), Vmax/2, Vmax/2) # theta_{1:J}, sigma_S, sigma_R
+  if(homogeneous){
+    theta0 <- c(rep(Dmax/2, J), Vmax/2) # theta_{1:J}, sigma
+    UI <- rbind(diag(J+1), -1*diag(J+1))
+    CI <- c(rep(0.001, J+1), rep(-Dmax, J), -Vmax)
+  } else {
+    theta0 <- c(rep(Dmax/2, J), Vmax/2, Vmax/2) # theta_{1:J}, sigma_S, sigma_R
+    UI <- rbind(diag(J+2), -1*diag(J+2))
+    CI <- c(rep(0.001, J+2), rep(-Dmax, J), -Vmax, -Vmax)
+  }
   
   if(verbose) cat("Optimizing... \n")
   
@@ -94,31 +105,40 @@ gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
     subsetStatic <- as.numeric(subtfpca)
   }
   
-  UI <- rbind(diag(J+2), -1*diag(J+2))
-  CI <- c(rep(0.001, J+2), rep(-Dmax, J), -Vmax, -Vmax)
-  prof.max <- constrOptim(theta0, logProfileCpp, grad = NULL, # grad = dlogProfileCpp,
-                          ui = UI, ci = CI, # Constraints
-                          DTR = DTR, Y = training.set[,1], XTR = XTR, 
-                          subsetStatic = subsetStatic,
-                          # PhiTime = Phi.est[training.set[,2],], 
-                          PhiTime = Phi.est[match(((training.set[ ,2] - min(training.set[ ,2])) / timerange), t.fit),], 
-                          LambEst = lamb.est)
+  if(homogeneous){
+    prof.max <- constrOptim(theta0, logProfileCpp, grad = NULL, # grad = dlogProfileCpp,
+                            ui = UI, ci = CI, # Constraints
+                            DTR = DTR, Y = training.set[,1], XTR = XTR, 
+                            subsetStatic = subsetStatic,
+                            # PhiTime = Phi.est[training.set[,2],], 
+                            PhiTime = Phi.est[match(((training.set[ ,2] - min(training.set[ ,2])) / timerange), t.fit),], 
+                            LambEst = lamb.est)
+  } else {
+    prof.max <- constrOptim(theta0, logProfileCppH, grad = dlogProfileCppH,
+                            ui = UI, ci = CI, # Constraints
+                            DTR = DTR, Y = training.set[,1], XTR = XTR, 
+                            subsetStatic = subsetStatic,
+                            # PhiTime = Phi.est[training.set[,2],], 
+                            PhiTime = Phi.est[match(((training.set[ ,2] - min(training.set[ ,2])) / timerange), t.fit),], 
+                            LambEst = lamb.est)
+  }
+  
   theta <- prof.max$par
-  if(is.null(subtfpca)) {
+  if(is.null(subtfpca) & !homogeneous) {
     theta <- theta[-length(theta)] 
   }
   
   if(verbose) cat("Optimization done. \n")
   
-  # PhiTime <- Phi.est[training.set[,2],] # WRITE EVALUATOR HERE!
   PhiTime <- Phi.est[match(((training.set[ ,2] - min(training.set[ ,2])) / timerange), t.fit), ]
   psi.cov <- matrix(0, nrow = nTR, ncol = nTR)
-  Gamma1 <- lamb.est[1]*exp(-DTR/theta[1])
-  Gamma2 <- lamb.est[2]*exp(-DTR/theta[2])
-  for (i in 1:nTR){
-    psi.cov[i,] <- Gamma1[i,]*PhiTime[i,1]*PhiTime[,1]+Gamma2[i,]*PhiTime[i,2]*PhiTime[,2]
+  for(j in 1:J){
+    psi.cov <- psi.cov + lamb.est[j]*exp(-DTR/theta[j])*outer(PhiTime[,j],PhiTime[,j])
   }
-  diag(psi.cov) <- diag(psi.cov)+theta[3]
+  diag(psi.cov) <- diag(psi.cov) + theta[J+1]
+  if (!homogeneous & sum(subsetStatic) < length(subsetStatic)){
+    diag(psi.cov) <- diag(psi.cov) + (theta[J+2] - theta[J+1])*(1-subsetStatic)
+  } 
   
   beta.est <- solve(crossprod(XTR, solve(psi.cov, XTR)), crossprod(XTR, solve(psi.cov, YTR)))
   resid <- YTR-XTR%*%beta.est
@@ -131,13 +151,11 @@ gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
     DKrig[i,] <- sqrt((training.set[i,3] - prediction.set[,3])^2 + (training.set[i,4] - prediction.set[,4])^2)
   }
   
-  # PhiTimeTE <- Phi.est[prediction.set[,2],] # WRITE EVALUATOR HERE!
   PhiTimeTE <- Phi.est[match(((prediction.set[ ,2] - min(training.set[ ,2])) / timerange), t.pred), ]
-  Gamma1TE <- lamb.est[1]*exp(-DKrig/theta[1])
-  Gamma2TE <- lamb.est[2]*exp(-DKrig/theta[2])
-  for (i in 1:nTR){
-    psi.krig[i,] <- Gamma1TE[i,]*PhiTime[i,1]*PhiTimeTE[,1]+Gamma2TE[i,]*PhiTime[i,2]*PhiTimeTE[,2]
+  for(j in 1:J){
+    psi.krig <- psi.krig + lamb.est[j]*exp(-DKrig/theta[j])*outer(PhiTime[,j],PhiTimeTE[,j])
   }
+  
   XTE <- cbind(1, prediction.set[,3:4], splines::bs(prediction.set[ ,2], df = spline.df))
   YKrig <- XTE%*%beta.est+crossprod(psi.krig, solve(psi.cov, resid))
   MSPEKrig <- mean((prediction.set[,1]-YKrig)^2)

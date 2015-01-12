@@ -5,7 +5,15 @@ dlogProfileCpp <- function(theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst) {
     .Call('gfda_dlogProfileCpp', PACKAGE = 'gfda', theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst)
 }
 
+dlogProfileCppH <- function(theta, DTR, Y, XTR, PhiTime, LambEst) {
+    .Call('gfda_dlogProfileCppH', PACKAGE = 'gfda', theta, DTR, Y, XTR, PhiTime, LambEst)
+}
+
 logProfileCpp <- function(theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst) {
     .Call('gfda_logProfileCpp', PACKAGE = 'gfda', theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst)
+}
+
+logProfileCppH <- function(theta, DTR, Y, XTR, PhiTime, LambEst) {
+    .Call('gfda_logProfileCppH', PACKAGE = 'gfda', theta, DTR, Y, XTR, PhiTime, LambEst)
 }
 

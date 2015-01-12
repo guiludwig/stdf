@@ -5,7 +5,8 @@
 \title{GFDA model}
 \usage{
 gfda(training.set, prediction.set, subtfpca = NULL, ssensors = 6, J = 2,
-  spline.df = NULL, fpca.df = 20, verbose = TRUE, ...)
+  spline.df = NULL, fpca.df = 20, homogeneous = FALSE, verbose = TRUE,
+  ...)
 }
 \arguments{
 \item{training.set}{A numeric matrix with the response variable in the first column,
@@ -22,6 +23,8 @@ MSPE calculation.}
 \item{spline.df}{Number of spline basis for the deterministic spline component (see \code{\link{bs}} function).}
 
 \item{fpca.df}{Number of spline basis for the stochastic spline component (see \code{\link{tfpca}} function).}
+
+\item{homogeneous}{Whether the variance of static and roving sensors is assumed to be the same or not. Defaults to not.}
 
 \item{verbose}{Wheter \code{gfda} gives detailed information on optimization step, defaults to \code{TRUE}.}
 }
@@ -46,6 +49,7 @@ set.seed(1)
 X <- cbind(rnorm(200), rep(1:50,4), rep(c(2,2,4,4), each = 50), rep(c(2,4,2,4), each = 50))
 Xpred <- cbind(rnorm(50), 1:50, 3, 3)
 results <- gfda(X, Xpred, ssensors = 4)
+resultsH <- gfda(X, Xpred, ssensors = 4, homogeneous = TRUE)
 X2 <- rbind(X, cbind(rnorm(50), 1:50, seq(2,4, length=50), seq(2,4, length=50)))
 resultsPlusRoving <- gfda(X2, Xpred, subtfpca = c(rep(TRUE,200), rep(FALSE,50)), ssensors = 4)
 }

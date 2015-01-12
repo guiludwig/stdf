@@ -15,3 +15,5 @@ junk/logProfiler.cpp
 *.o
 *.dll
 *.o
+*.o
+*.dll
