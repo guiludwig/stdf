@@ -10,16 +10,16 @@
 #'
 #' @param MatY The data organized in a matrix, with each time series in a column. Missing 
 #' values are currently not handled properly.
-#' @param J The number of functional principal components to be returned.
+#' @param L The number of functional principal components to be returned.
 #' @param t.fit Values of the time-domain at which a value is fitted.
 #' @param t.pred Values of the time-domain at which a predicted value needs to be produced.
 #' @param tbas Number of spline basis functions used in the smooth.
 #'
 #' @export
 #' @return List of three items 
-#'   \item{values}{numeric vector of J Eigenvalue estimates}
-#'   \item{vectors}{matrix of J columns with Eigenfunction estimates observed at t.fit}
-#'   \item{pred.vec}{matrix of J columns with Eigenfunction estimates observed at t.pred}
+#'   \item{values}{numeric vector of L Eigenvalue estimates}
+#'   \item{vectors}{matrix of L columns with Eigenfunction estimates observed at t.fit}
+#'   \item{pred.vec}{matrix of L columns with Eigenfunction estimates observed at t.pred}
 #'
 #' @examples
 #' # This example uses fda's CanadianWeather dataset:
@@ -35,19 +35,18 @@
 #' @seealso \code{\link{pca.fd}}, \code{\link{gfda}}
 #' @keywords Spatial Statistics
 #' @keywords Functional Data Analysis
-tfpca <- function(MatY, J, t.fit, t.pred, tbas=10){
-  nObs <- dim(MatY)[1]
+tfpca <- function(MatY, L, t.fit, t.pred, tbas=10){
+  nObs <- nrow(MatY)
   rng <- range(c(t.fit, t.pred))
   timebasis <- fda::create.bspline.basis(rng, nbasis=tbas) # Smoothness controlled with # basis
-  timefdPar <- fda::fdPar(timebasis)
-  daytempfd <- fda::smooth.basis(t.fit, MatY, timebasis)$fd
-  pcafd <- fda::pca.fd(daytempfd, nharm = J, timefdPar)
+  timefdPar <- fda::fdPar(timebasis) # Sets parameters getting defaults (lambda = 0 => no additional smoothing)
+  smtempfd <- fda::smooth.basis(t.fit, MatY, timebasis)$fd # Preliminary smoothing
+  pcafd <- fda::pca.fd(smtempfd, nharm = L, timefdPar)
   harmfd <- pcafd[[1]]
   fdmat <- fda::eval.fd(t.fit, harmfd)
-  
   etan <- apply(fdmat^2,2,sum)
-  values <- pcafd$values[1:J]*etan/nObs # Truncates at J, multiply by |phi|, divide by n
-  vectors <- fdmat*t(matrix(sqrt(nObs/etan), J, nObs)) # Vectors at scale of data?
-  fd.pre <- fda::eval.fd(t.pred, harmfd)*t(matrix(sqrt(nObs/etan),J,length(t.pred)))
+  values <- pcafd$values[1:L]*etan/nObs # Truncates at L, multiply by |phi|, divide by n
+  vectors <- fdmat*t(matrix(sqrt(nObs/etan), L, nObs)) # Vectors at scale of data?
+  fd.pre <- fda::eval.fd(t.pred, harmfd)*t(matrix(sqrt(nObs/etan),L,length(t.pred)))
   return(list(values=values, vectors=vectors, pred.vec=fd.pre))
 }

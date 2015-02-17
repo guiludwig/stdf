@@ -43,8 +43,8 @@ double logProfileCppH(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR,
   // End GLS
   Eigen::VectorXd resid = Y - XTR*beta;
   double quadForm = (resid.adjoint())*(psi.ldlt().solve(resid));
-  double logUdet = U.diagonal().array().log().sum();
-  return(quadForm/2 + logUdet);
+  double logUdet = log(U.diagonal().array().sum()); // = 1/2log(Sigma)
+  return(quadForm + logUdet);
 }
 
 // Test:

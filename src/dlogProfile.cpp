@@ -44,7 +44,8 @@ Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixX
   for(int j = 0; j < J; j++){ 
     psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
   }
-  VectorXd RandNoise = theta(J)*Eigen::VectorXd::Constant(N,1) + (theta(J+1) - theta(J))*subsetStatic;
+  // This is weird but: sigma_R I + (sigma_S - sigma_R) 1{static}
+  VectorXd RandNoise = theta(J+1)*Eigen::VectorXd::Constant(N,1) + (theta(J) - theta(J+1))*subsetStatic;
   psi += RandNoise.asDiagonal(); // theta has J+2 elements
   Eigen::MatrixXd psiInv = psi.inverse();
   // Eigen::MatrixXd U = psi.llt().matrixL().adjoint(); // same as chol(psi) in R

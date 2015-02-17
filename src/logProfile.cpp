@@ -38,7 +38,8 @@ double logProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR,
   for(int j = 0; j < J; j++){ 
     psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
   }
-  VectorXd RandNoise = theta(J)*Eigen::VectorXd::Constant(N,1) + (theta(J+1) - theta(J))*subsetStatic;
+  // This is weird but: sigma_R I + (sigma_S - sigma_R) 1{static}
+  VectorXd RandNoise = theta(J+1)*Eigen::VectorXd::Constant(N,1) + (theta(J) - theta(J+1))*subsetStatic;
   psi += RandNoise.asDiagonal(); // theta has J+2 elements
   Eigen::MatrixXd U = psi.llt().matrixL().adjoint(); // same as chol(psi) in R
   // This step finds beta by Generalized Least Squares
@@ -47,8 +48,8 @@ double logProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR,
   // End GLS
   Eigen::VectorXd resid = Y - XTR*beta;
   double quadForm = (resid.adjoint())*(psi.ldlt().solve(resid));
-  double logUdet = U.diagonal().array().log().sum();
-  return(quadForm/2 + logUdet);
+  double logUdet = log(U.diagonal().array().sum()); // = 1/2log(Sigma)
+  return(quadForm + logUdet);
 }
 
 // Test:

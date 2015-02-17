@@ -4,13 +4,13 @@
 \alias{tfpca}
 \title{Temporal Functional Principal Component}
 \usage{
-tfpca(MatY, J, t.fit, t.pred, tbas = 10)
+tfpca(MatY, L, t.fit, t.pred, tbas = 10)
 }
 \arguments{
 \item{MatY}{The data organized in a matrix, with each time series in a column. Missing
 values are currently not handled properly.}
 
-\item{J}{The number of functional principal components to be returned.}
+\item{L}{The number of functional principal components to be returned.}
 
 \item{t.fit}{Values of the time-domain at which a value is fitted.}
 
@@ -20,9 +20,9 @@ values are currently not handled properly.}
 }
 \value{
 List of three items
-  \item{values}{numeric vector of J Eigenvalue estimates}
-  \item{vectors}{matrix of J columns with Eigenfunction estimates observed at t.fit}
-  \item{pred.vec}{matrix of J columns with Eigenfunction estimates observed at t.pred}
+  \item{values}{numeric vector of L Eigenvalue estimates}
+  \item{vectors}{matrix of L columns with Eigenfunction estimates observed at t.fit}
+  \item{pred.vec}{matrix of L columns with Eigenfunction estimates observed at t.pred}
 }
 \description{
 This function is used on step II of the GFDA algorithm by Chu, Zhu and Wang (2014). It does
