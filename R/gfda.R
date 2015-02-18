@@ -59,7 +59,12 @@
 #' results <- gfda(static, prediction, ssensors = 4, L = 3)
 #' resultsH <- gfda(static, prediction, ssensors = 4, L = 3, homogeneous = TRUE)
 #' resultsPlusRoving <- gfda(rbind(static, roving), prediction, 
-#'                           subtfpca = c(rep(TRUE,200), rep(FALSE,50)), ssensors = 4, L = 3)
+#'                           subtfpca = c(rep(TRUE,200), rep(FALSE,50)), 
+#'                           ssensors = 4, L = 3)
+#' # Wrong model:                         
+#' resultsPlusRovingH <- gfda(rbind(static, roving), prediction, 
+#'                           subtfpca = c(rep(TRUE,200), rep(FALSE,50)), 
+#'                           ssensors = 4, L = 3, homogeneous = TRUE)
 #' 
 #' @references
 #'  \url{http://www.google.com}
@@ -70,6 +75,8 @@
 gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6, 
                  L = 2, spline.df = NULL, fpca.df = 10, homogeneous = FALSE, 
                  verbose = TRUE, ...){
+  
+  if(!is.null(subtfpca) && sum(subtfpca) == length(subtfpca)) message("Only static sensors, consider setting homogeneous = TRUE or subtfpca = NULL")
   
   nTR <- nrow(training.set)
   nTS <- nrow(prediction.set)
@@ -129,7 +136,7 @@ gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
   }
   
   if(!homogeneous){
-    prof.max <- constrOptim(theta0, logProfileCpp, grad = NULL, # grad = dlogProfileCpp,
+    prof.max <- constrOptim(theta0, logProfileCpp, grad = dlogProfileCpp, # grad = dlogProfileCpp,
                             ui = UI, ci = CI, # Constraints
                             DTR = DTR, Y = YTR, XTR = XTR, 
                             subsetStatic = subsetStatic,

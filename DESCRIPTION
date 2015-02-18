@@ -9,7 +9,7 @@ Imports:
 LinkingTo: Rcpp, RcppEigen
 Type: Package
 Title: Geostatistical Functional Data Analysis model
-Version: 0.2.2
+Version: 0.2.3
 License: GPL (>= 2)
 Authors@R: c(
     person("Guilherme", "Ludwig", email = "gvludwig@stat.wisc.edu", role = c("aut", "cre")),

@@ -16,27 +16,27 @@ using Eigen::ArrayXd;
 // [[Rcpp::depends(RcppEigen)]]
 // [[Rcpp::export]]
 Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR, 
-                               const Eigen::VectorXd Y, const Eigen::MatrixXd XTR, 
-                               const Eigen::VectorXd subsetStatic, const Eigen::MatrixXd PhiTime, 
-                               const Eigen::VectorXd LambEst) {
+const Eigen::VectorXd Y, const Eigen::MatrixXd XTR, 
+const Eigen::VectorXd subsetStatic, const Eigen::MatrixXd PhiTime, 
+const Eigen::VectorXd LambEst) {
   /* 
-   theta: J x 1
-   DTR: N x N
-   Y: N x 1
-   XTR: N x 6 (b0, bx, by, spline-basis)
-   PhiTime: N x J
-   LambEst: (J-1) x 1
+  theta: J x 1
+  DTR: N x N
+  Y: N x 1
+  XTR: N x 6 (b0, bx, by, spline-basis)
+  PhiTime: N x J
+  LambEst: (J-1) x 1
   
-   removed arg: const Eigen::MatrixXd&NoiTR,
-     pass NoiTR[,1] to it
-   removed arg: const Eigen::VectorXd& PhiEst, 
-     pass Phi.est[NoiTR[,2]] to it
-     
-     
-   More about eigen: http://home.uchicago.edu/~skrainka/pdfs/Talk.Eigen.pdf
-                     http://eigen.tuxfamily.org/dox/AsciiQuickReference.txt
-
-     */
+  removed arg: const Eigen::MatrixXd&NoiTR,
+  pass NoiTR[,1] to it
+  removed arg: const Eigen::VectorXd& PhiEst, 
+  pass Phi.est[NoiTR[,2]] to it
+  
+  
+  More about eigen: http://home.uchicago.edu/~skrainka/pdfs/Talk.Eigen.pdf
+  http://eigen.tuxfamily.org/dox/AsciiQuickReference.txt
+  
+  */
   
   int N = Y.size();
   int J = LambEst.size();
@@ -47,7 +47,7 @@ Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixX
   // This is weird but: sigma_R I + (sigma_S - sigma_R) 1{static}
   VectorXd RandNoise = theta(J+1)*Eigen::VectorXd::Constant(N,1) + (theta(J) - theta(J+1))*subsetStatic;
   psi += RandNoise.asDiagonal(); // theta has J+2 elements
-  Eigen::MatrixXd psiInv = psi.inverse();
+  Eigen::MatrixXd psiInv = psi.ldlt().solve(Eigen::MatrixXd::Identity(N,N));
   // Eigen::MatrixXd U = psi.llt().matrixL().adjoint(); // same as chol(psi) in R
   // This step finds beta by Generalized Least Squares
   // Eigen::MatrixXd SX = psi.llt().solve(XTR); // A\b by Cholesky's decomposition
@@ -98,8 +98,16 @@ Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixX
   
   // dTheta(J) = -1*(sigmaResStatic.adjoint())*sigmaResStatic + eig.compute(psi.cwiseProduct(whichCells)).eigenvalues().array().pow(-1).sum();
   // dTheta(J+1) = -1*(sigmaResRoving.adjoint())*sigmaResRoving + eig.compute(psi.cwiseProduct(1-whichCells)).eigenvalues().array().pow(-1).sum();
-  dTheta(J) = -1*(sigmaResStatic.adjoint())*sigmaResStatic + diagS;
-  dTheta(J+1) = -1*(sigmaResRoving.adjoint())*sigmaResRoving + diagR;
+//  if(wS == 0){
+//    dTheta(J) = 0;
+//    dTheta(J+1) = -1*(sigmaResRoving.adjoint())*sigmaResRoving + diagR;
+//  } else if(wR == 0) {
+//    dTheta(J) = -1*(sigmaResStatic.adjoint())*sigmaResStatic + diagS;
+//    dTheta(J+1) = 0;
+//  } else {
+    dTheta(J) = -1*(sigmaResStatic.adjoint())*sigmaResStatic + diagS;
+    dTheta(J+1) = -1*(sigmaResRoving.adjoint())*sigmaResRoving + diagR;
+//  }
   
   return(dTheta);
 }

@@ -77,7 +77,12 @@ prediction[,1] <- complete[251:300,1]
 results <- gfda(static, prediction, ssensors = 4, L = 3)
 resultsH <- gfda(static, prediction, ssensors = 4, L = 3, homogeneous = TRUE)
 resultsPlusRoving <- gfda(rbind(static, roving), prediction,
-                          subtfpca = c(rep(TRUE,200), rep(FALSE,50)), ssensors = 4, L = 3)
+                          subtfpca = c(rep(TRUE,200), rep(FALSE,50)),
+                          ssensors = 4, L = 3)
+# Wrong model:
+resultsPlusRovingH <- gfda(rbind(static, roving), prediction,
+                          subtfpca = c(rep(TRUE,200), rep(FALSE,50)),
+                          ssensors = 4, L = 3, homogeneous = TRUE)
 }
 \references{
 \url{http://www.google.com}
