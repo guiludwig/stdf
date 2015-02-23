@@ -38,13 +38,11 @@ Eigen::VectorXd dlogProfileCppH(const Eigen::VectorXd theta, const Eigen::Matrix
   
   int N = Y.size();
   int J = LambEst.size();
-  Eigen::MatrixXd psi; // Dynamic size means: not known at compilation time.
-  psi.setZero(N,N);
+  Eigen::MatrixXd psi(Eigen::MatrixXd(N,N).setZero()); // Dynamic size means: not known at compilation time.
   for(int j = 0; j < J; j++){ 
     psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).transpose());
   }
   psi += theta(J)*Eigen::MatrixXd::Identity(N,N); // theta has J+1 elements
-  Eigen::MatrixXd U = psi.llt().matrixL().transpose(); // same as chol(psi) in R
   // This step finds beta by Generalized Least Squares
   Eigen::MatrixXd SX = psi.llt().solve(XTR); // A\b by Cholesky's decomposition
   Eigen::VectorXd beta = ((XTR.adjoint())*SX).ldlt().solve((SX.adjoint())*Y);
@@ -54,17 +52,16 @@ Eigen::VectorXd dlogProfileCppH(const Eigen::VectorXd theta, const Eigen::Matrix
   // Difference to logProfile() starts here 
   
   Eigen::VectorXd sigmaRes = psi.ldlt().solve(resid);
-  Eigen::MatrixXd psij;
-  Eigen::VectorXd dTheta;
-  dTheta.resize(J+1);
+  Eigen::MatrixXd psij(Eigen::MatrixXd(N,N).setZero());
+  Eigen::VectorXd dTheta = Eigen::VectorXd::Constant(J+1,0);
   
-  Eigen::SelfAdjointEigenSolver<MatrixXd> eig;
+  // Eigen::SelfAdjointEigenSolver<MatrixXd> eig;
   
   for(int j = 0; j < J; j++){
     psij = DTR.cwiseProduct((LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix())).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).transpose()))/(theta(j)*theta(j)); // if using c = 1/theta, then -1
-    dTheta(j) = -1*(sigmaRes.adjoint())*psij*sigmaRes + (psi.ldlt().solve(psij)).diagonal().array().sum();
+    dTheta(j) = -1*(sigmaRes.adjoint())*psij*sigmaRes + (psi.ldlt().solve(psij)).trace(); //.diagonal().array().sum();
   }
-  dTheta(J) = -1*(sigmaRes.adjoint())*sigmaRes + eig.compute(psi).eigenvalues().array().pow(-1).sum();
+  dTheta(J) = -1*(sigmaRes.adjoint())*sigmaRes + (psi.llt().solve(Eigen::MatrixXd::Identity(N, N))).trace(); // eig.compute(psi).eigenvalues().array().pow(-1).sum();
   
   return(dTheta);
 }

@@ -14,13 +14,17 @@
 #' @param ssensors Integer corresponding to how many static sensors in the dataset.
 #' @param L Number of eigenfunctions in spatio-temporal covariance, defaults to 2.
 #' @param spline.df Number of spline basis for the deterministic spline component (see 
-#'                  \code{\link{bs}} function).
+#'                  \code{\link{bs}} function). Defaults to NULL, which uses 3 spline basis.
 #' @param fpca.df Number of spline basis for the stochastic spline component (see \code{\link{tfpca}} 
-#'                function).
+#'                function). Defaults to 10.
 #' @param homogeneous Whether the variance of static and roving sensors is assumed to be the same or not. 
 #'                    Defaults to not.
 #' @param verbose Whether \code{gfda} prints information about the optimization step, defaults to 
 #'                \code{TRUE}.
+#' @param method Either "L-BFGS-B" or "Nelder-Mead", which are passed to the optimization
+#'               function \code{\link{constrOptim}}. Simulation results indicate
+#'               that the methods show numeric differences, particularly at 
+#'               estimating smaller values of theta. 
 #'
 #' @export
 #' @return List of four items 
@@ -31,10 +35,10 @@
 #'   \item{sigma2r}{Roving sensor variability}
 #'
 #' @examples
+#' ## library(fda)
 #' ## Y <- CanadianWeather$dailyAv
 #' ## XY <- CanadianWeather$coordinates
 #' # =sensor simulation example:
-#' library(fda)
 #' set.seed(1)
 #' static <- cbind(rep(0, 200), rep(1:50,4), rep(c(2,2,4,4), each = 50), rep(c(2,4,2,4), each = 50))
 #' roving <- cbind(rep(0, 50), 1:50, seq(2,4, length=50), seq(2,4, length=50))
@@ -57,24 +61,46 @@
 #' prediction[,1] <- complete[251:300,1]
 #' 
 #' results <- gfda(static, prediction, ssensors = 4, L = 3)
+#' resultsNM <- gfda(static, prediction, ssensors = 4, L = 3, 
+#'                   method = "Nelder-Mead")
+#' # Compare results of using "L-BFGS-B" and "Nelder-Mead";
+#' # Should be almost the same, bar numberical accuracy issues
+#' results
+#' resultsNM
+#' # Compare with fitting homogeneous case
 #' resultsH <- gfda(static, prediction, ssensors = 4, L = 3, homogeneous = TRUE)
-#' resultsPlusRoving <- gfda(rbind(static, roving), prediction, 
+#' resultsHNM <- gfda(static, prediction, ssensors = 4, L = 3, 
+#'                    homogeneous = TRUE, method = "Nelder-Mead")
+#'                    
+#' # Nelder-Mead is more time-consuming, for example in this case:
+#' system.time({resultsPlusRoving <- gfda(rbind(static, roving), prediction, 
 #'                           subtfpca = c(rep(TRUE,200), rep(FALSE,50)), 
-#'                           ssensors = 4, L = 3)
-#' # Wrong model:                         
+#'                           ssensors = 4, L = 3)})
+#' system.time({resultsPlusRovingNM <- gfda(rbind(static, roving), prediction, 
+#'                             subtfpca = c(rep(TRUE,200), rep(FALSE,50)), 
+#'                             ssensors = 4, L = 3, method = "Nelder-Mead")})
+#' # Results should be almost the same, bar numberical accuracy issues
+#' resultsPlusRoving
+#' resultsPlusRovingNM
+#' # Forces homogeneous model:                         
 #' resultsPlusRovingH <- gfda(rbind(static, roving), prediction, 
 #'                           subtfpca = c(rep(TRUE,200), rep(FALSE,50)), 
 #'                           ssensors = 4, L = 3, homogeneous = TRUE)
 #' 
+#' @author Guilherme Ludwig and Tingjin Chu
+#' 
 #' @references
-#'  \url{http://www.google.com}
+#' 
+#'   Chu, T., Zhu, J. and Wang, H. (2014) On Semiparametric Inference of Geostatistical Models via Local Karhunen-Loeve Expansion. \emph{Journal of the Royal Statistical Society}, 76, 817-832.
+#'   
+#'   Ludwig, G., Chu, T., Zhu, J., Wang, H. and Koehler, K. (2015) A Geostatistical Functional Data Analysis Approach to Combining Static and Roving Sensor Data for Environmental Hazard Mapping, \emph{to appear}.
 #'
 #' @seealso \code{\link{tfpca}}
 #' @keywords Spatial Statistics
 #' @keywords Functional Data Analysis
 gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6, 
                  L = 2, spline.df = NULL, fpca.df = 10, homogeneous = FALSE, 
-                 verbose = TRUE, ...){
+                 verbose = TRUE, method = "L-BFGS-B", ...){
   
   if(!is.null(subtfpca) && sum(subtfpca) == length(subtfpca)) message("Only static sensors, consider setting homogeneous = TRUE or subtfpca = NULL")
   
@@ -135,20 +161,38 @@ gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
     subsetStatic <- as.numeric(subtfpca)
   }
   
-  if(!homogeneous){
-    prof.max <- constrOptim(theta0, logProfileCpp, grad = dlogProfileCpp, # grad = dlogProfileCpp,
-                            ui = UI, ci = CI, # Constraints
-                            DTR = DTR, Y = YTR, XTR = XTR, 
-                            subsetStatic = subsetStatic,
-                            PhiTime = Phi.est[match(training.set[ ,2], t.fit),], 
-                            LambEst = lamb.est)
+  if(method == "Nelder-Mead"){
+    if(!homogeneous){
+      prof.max <- constrOptim(theta0, logProfileCpp, grad = NULL, 
+                              ui = UI, ci = CI, # Constraints
+                              DTR = DTR, Y = YTR, XTR = XTR, 
+                              subsetStatic = subsetStatic,
+                              PhiTime = Phi.est[match(training.set[ ,2], t.fit),], 
+                              LambEst = lamb.est)
+    } else {
+      prof.max <- constrOptim(theta0, logProfileCppH, grad = NULL,
+                              ui = UI, ci = CI, # Constraints
+                              DTR = DTR, Y = YTR, XTR = XTR, 
+                              PhiTime = Phi.est[match(training.set[ ,2], t.fit),], 
+                              LambEst = lamb.est)
+    }
   } else {
-    prof.max <- constrOptim(theta0, logProfileCppH, grad = dlogProfileCppH,
-                            ui = UI, ci = CI, # Constraints
-                            DTR = DTR, Y = YTR, XTR = XTR, 
-                            PhiTime = Phi.est[match(training.set[ ,2], t.fit),], 
-                            LambEst = lamb.est)
-  }
+    if(!homogeneous){
+      prof.max <- constrOptim(theta0, logProfileCpp, grad = dlogProfileCpp, 
+                              ui = UI, ci = CI, # Constraints
+                              DTR = DTR, Y = YTR, XTR = XTR, 
+                              subsetStatic = subsetStatic,
+                              PhiTime = Phi.est[match(training.set[ ,2], t.fit),], 
+                              LambEst = lamb.est)
+    } else {
+      prof.max <- constrOptim(theta0, logProfileCppH, grad = dlogProfileCppH,
+                              ui = UI, ci = CI, # Constraints
+                              DTR = DTR, Y = YTR, XTR = XTR, 
+                              PhiTime = Phi.est[match(training.set[ ,2], t.fit),], 
+                              LambEst = lamb.est)
+    }
+  } 
+  
   
   theta <- prof.max$par
   if(is.null(subtfpca) & !homogeneous) {
@@ -189,6 +233,9 @@ gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
   
   beta.est <- as.numeric(beta.est)
   names(beta.est) <- c("b0", "bx", "by", paste0("sp", seq_len(length(beta.est)-3))) # 3 basis function, time using defaults
-  ret <- list(beta.est = beta.est, MSPEKrig = MSPEKrig, spatCov = theta)
+  ret <- list(beta.est = beta.est, MSPEKrig = MSPEKrig, spatCov = theta[1:L])
+  ret$sigma2s <- theta[L+1]
+  if(!is.na(theta[L+2]))
+    ret$sigma2r <- theta[L+2]
   return(ret)
 }

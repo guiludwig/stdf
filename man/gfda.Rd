@@ -6,7 +6,7 @@
 \usage{
 gfda(training.set, prediction.set, subtfpca = NULL, ssensors = 6, L = 2,
   spline.df = NULL, fpca.df = 10, homogeneous = FALSE, verbose = TRUE,
-  ...)
+  method = "L-BFGS-B", ...)
 }
 \arguments{
 \item{training.set}{A numeric matrix with the response variable in the first column,
@@ -25,16 +25,21 @@ component. Defaults to NULL, which includes all lines.}
 \item{L}{Number of eigenfunctions in spatio-temporal covariance, defaults to 2.}
 
 \item{spline.df}{Number of spline basis for the deterministic spline component (see
-\code{\link{bs}} function).}
+\code{\link{bs}} function). Defaults to NULL, which uses 3 spline basis.}
 
 \item{fpca.df}{Number of spline basis for the stochastic spline component (see \code{\link{tfpca}}
-function).}
+function). Defaults to 10.}
 
 \item{homogeneous}{Whether the variance of static and roving sensors is assumed to be the same or not.
 Defaults to not.}
 
 \item{verbose}{Whether \code{gfda} prints information about the optimization step, defaults to
-               \code{TRUE}.}
+\code{TRUE}.}
+
+\item{method}{Either "L-BFGS-B" or "Nelder-Mead", which are passed to the optimization
+              function \code{\link{constrOptim}}. Simulation results indicate
+              that the methods show numeric differences, particularly at
+              estimating smaller values of theta.}
 }
 \value{
 List of four items
@@ -49,10 +54,10 @@ This function is an wrapper to fitting a Geostatistical Functional Data
 Analysis (GFDA) model to spatio-temporal data.
 }
 \examples{
+## library(fda)
 ## Y <- CanadianWeather$dailyAv
 ## XY <- CanadianWeather$coordinates
 # =sensor simulation example:
-library(fda)
 set.seed(1)
 static <- cbind(rep(0, 200), rep(1:50,4), rep(c(2,2,4,4), each = 50), rep(c(2,4,2,4), each = 50))
 roving <- cbind(rep(0, 50), 1:50, seq(2,4, length=50), seq(2,4, length=50))
@@ -75,17 +80,39 @@ roving[,1] <- complete[201:250,1]
 prediction[,1] <- complete[251:300,1]
 
 results <- gfda(static, prediction, ssensors = 4, L = 3)
+resultsNM <- gfda(static, prediction, ssensors = 4, L = 3,
+                  method = "Nelder-Mead")
+# Compare results of using "L-BFGS-B" and "Nelder-Mead";
+# Should be almost the same, bar numberical accuracy issues
+results
+resultsNM
+# Compare with fitting homogeneous case
 resultsH <- gfda(static, prediction, ssensors = 4, L = 3, homogeneous = TRUE)
-resultsPlusRoving <- gfda(rbind(static, roving), prediction,
+resultsHNM <- gfda(static, prediction, ssensors = 4, L = 3,
+                   homogeneous = TRUE, method = "Nelder-Mead")
+
+# Nelder-Mead is more time-consuming, for example in this case:
+system.time({resultsPlusRoving <- gfda(rbind(static, roving), prediction,
                           subtfpca = c(rep(TRUE,200), rep(FALSE,50)),
-                          ssensors = 4, L = 3)
-# Wrong model:
+                          ssensors = 4, L = 3)})
+system.time({resultsPlusRovingNM <- gfda(rbind(static, roving), prediction,
+                            subtfpca = c(rep(TRUE,200), rep(FALSE,50)),
+                            ssensors = 4, L = 3, method = "Nelder-Mead")})
+# Results should be almost the same, bar numberical accuracy issues
+resultsPlusRoving
+resultsPlusRovingNM
+# Forces homogeneous model:
 resultsPlusRovingH <- gfda(rbind(static, roving), prediction,
                           subtfpca = c(rep(TRUE,200), rep(FALSE,50)),
                           ssensors = 4, L = 3, homogeneous = TRUE)
 }
+\author{
+Guilherme Ludwig and Tingjin Chu
+}
 \references{
-\url{http://www.google.com}
+Chu, T., Zhu, J. and Wang, H. (2014) On Semiparametric Inference of Geostatistical Models via Local Karhunen-Loeve Expansion. \emph{Journal of the Royal Statistical Society}, 76, 817-832.
+
+  Ludwig, G., Chu, T., Zhu, J., Wang, H. and Koehler, K. (2015) A Geostatistical Functional Data Analysis Approach to Combining Static and Roving Sensor Data for Environmental Hazard Mapping, \emph{to appear}.
 }
 \seealso{
 \code{\link{tfpca}}

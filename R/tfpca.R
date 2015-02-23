@@ -30,7 +30,7 @@
 #' plot(test$vectors[,2], type="l", main="Second Principal Component")
 #' 
 #' @references
-#'  Ramsay, J. O. (2006) Functional Data Analysis. New York: Springer.
+#'  Ramsay, J. O. (2006) \emph{Functional Data Analysis}. New York: Springer.
 #'
 #' @seealso \code{\link{pca.fd}}, \code{\link{gfda}}
 #' @keywords Spatial Statistics

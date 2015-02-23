@@ -1,21 +1,21 @@
 Package: gfda
 Depends:
-    R (>= 3.1.0)
-Imports:
-    fda,
+    R (>= 3.1.0),
     splines,
+    fda
+Imports:
     Rcpp (>= 0.11.3),
     RcppEigen (>= 0.3.2.2.0)
 LinkingTo: Rcpp, RcppEigen
 Type: Package
 Title: Geostatistical Functional Data Analysis model
-Version: 0.2.3
+Version: 0.2.4
+Author: Guilherme Ludwig [aut, cre],
+  Tingjin Chu [aut]
+Maintainer: Guilherme Ludwig <gvludwig@stat.wisc.edu>
 License: GPL (>= 2)
-Authors@R: c(
-    person("Guilherme", "Ludwig", email = "gvludwig@stat.wisc.edu", role = c("aut", "cre")),
-    person("Tingjin", "Chu", email = "tingjin@outlook.com", role = "aut"))
 Date: 2015-01-05
-Description: This package calculates the Geostatistical
-    Functional Data Analysis model of Chu, Zhu and Wang (2014);
-    it uses a fast RcppEigen implementation to optimize its
-    terms.
+Description: This package calculates the Geostatistical Functional
+    Data Analysis model of Chu, Zhu and Wang (2014) and Ludwig, Chu, 
+    Zhu, Wang and Koehler (to appear). It uses a fast RcppEigen 
+    implementation to optimize its terms.

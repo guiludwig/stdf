@@ -31,7 +31,7 @@ double logProfileCppH(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR,
      */
   int N = Y.size();
   int J = LambEst.size();
-  Eigen::MatrixXd psi(MatrixXd(N,N).setZero()); // Dynamic size means: not known at compilation time.
+  Eigen::MatrixXd psi(Eigen::MatrixXd(N,N).setZero()); // Dynamic size means: not known at compilation time.
   for(int j = 0; j < J; j++){ 
     psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
   }
@@ -43,7 +43,7 @@ double logProfileCppH(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR,
   // End GLS
   Eigen::VectorXd resid = Y - XTR*beta;
   double quadForm = (resid.adjoint())*(psi.ldlt().solve(resid));
-  double logUdet = log(U.diagonal().array().sum()); // = 1/2log(Sigma)
+  double logUdet = 2*U.diagonal().array().log().sum(); // = log(|Sigma|)
   return(quadForm + logUdet);
 }
 

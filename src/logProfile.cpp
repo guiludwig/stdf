@@ -24,7 +24,7 @@ double logProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR,
           J+1 has static variance, J+2 has roving variance.
    DTR: N x N
    Y: N x 1
-   XTR: N x 3 + spline.df (b0, bx, by, spline-basis)
+   XTR: N x (3 + spline.df) (b0, bx, by, spline-basis)
    PhiTime: N x J
    LambEst: J x 1
   
@@ -34,7 +34,7 @@ double logProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR,
      */
   int N = Y.size();
   int J = LambEst.size();
-  Eigen::MatrixXd psi(MatrixXd(N,N).setZero()); // Dynamic size means: not known at compilation time.
+  Eigen::MatrixXd psi(Eigen::MatrixXd(N,N).setZero()); // Dynamic size means: not known at compilation time.
   for(int j = 0; j < J; j++){ 
     psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
   }
@@ -48,7 +48,7 @@ double logProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR,
   // End GLS
   Eigen::VectorXd resid = Y - XTR*beta;
   double quadForm = (resid.adjoint())*(psi.ldlt().solve(resid));
-  double logUdet = log(U.diagonal().array().sum()); // = 1/2log(Sigma)
+  double logUdet = 2*U.diagonal().array().log().sum(); // = log(|Sigma|)
   return(quadForm + logUdet);
 }
 

@@ -40,14 +40,14 @@ const Eigen::VectorXd LambEst) {
   
   int N = Y.size();
   int J = LambEst.size();
-  Eigen::MatrixXd psi(MatrixXd(N,N).setZero()); // Dynamic size means: not known at compilation time.
+  Eigen::MatrixXd psi(Eigen::MatrixXd(N,N).setZero()); // Dynamic size means: not known at compilation time.
   for(int j = 0; j < J; j++){ 
     psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
   }
   // This is weird but: sigma_R I + (sigma_S - sigma_R) 1{static}
   VectorXd RandNoise = theta(J+1)*Eigen::VectorXd::Constant(N,1) + (theta(J) - theta(J+1))*subsetStatic;
   psi += RandNoise.asDiagonal(); // theta has J+2 elements
-  Eigen::MatrixXd psiInv = psi.ldlt().solve(Eigen::MatrixXd::Identity(N,N));
+  Eigen::MatrixXd psiInv = psi.llt().solve(Eigen::MatrixXd::Identity(N,N));
   // Eigen::MatrixXd U = psi.llt().matrixL().adjoint(); // same as chol(psi) in R
   // This step finds beta by Generalized Least Squares
   // Eigen::MatrixXd SX = psi.llt().solve(XTR); // A\b by Cholesky's decomposition
@@ -60,7 +60,7 @@ const Eigen::VectorXd LambEst) {
   
   // Eigen::VectorXd sigmaRes = psi.ldlt().solve(resid);
   Eigen::VectorXd sigmaRes = psiInv * resid;
-  Eigen::MatrixXd psij = Eigen::MatrixXd::Identity(N, N);
+  Eigen::MatrixXd psij(Eigen::MatrixXd(N,N).setZero());
   Eigen::VectorXd dTheta = Eigen::VectorXd::Constant(J+2,0);
   // psij.setZero(N,N);
   // dTheta.resize(J+2);
