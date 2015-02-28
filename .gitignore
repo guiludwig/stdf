@@ -18,3 +18,4 @@ junk/logProfiler.cpp
 *.o
 *.dll
 *.o
+src/gfda.so

@@ -5,8 +5,8 @@
 \title{GFDA model}
 \usage{
 gfda(training.set, prediction.set, subtfpca = NULL, ssensors = 6, L = 2,
-  spline.df = NULL, fpca.df = 10, homogeneous = FALSE, verbose = TRUE,
-  method = "L-BFGS-B", ...)
+  spline.df = NULL, fpca.lambda = 0, fpca.df = 20, homogeneous = FALSE,
+  method = "L-BFGS-B", verbose = TRUE, ...)
 }
 \arguments{
 \item{training.set}{A numeric matrix with the response variable in the first column,
@@ -27,19 +27,20 @@ component. Defaults to NULL, which includes all lines.}
 \item{spline.df}{Number of spline basis for the deterministic spline component (see
 \code{\link{bs}} function). Defaults to NULL, which uses 3 spline basis.}
 
+\item{fpca.lambda}{Smoothness parameter for the fpca function. Defaults to 0 (no smoothing).
+See \code{\link{tfpca}} function.}
+
 \item{fpca.df}{Number of spline basis for the stochastic spline component (see \code{\link{tfpca}}
-function). Defaults to 10.}
+function). Defaults to 20. See \code{\link{tfpca}} function.}
 
 \item{homogeneous}{Whether the variance of static and roving sensors is assumed to be the same or not.
 Defaults to not.}
 
-\item{verbose}{Whether \code{gfda} prints information about the optimization step, defaults to
-\code{TRUE}.}
-
 \item{method}{Either "L-BFGS-B" or "Nelder-Mead", which are passed to the optimization
-              function \code{\link{constrOptim}}. Simulation results indicate
-              that the methods show numeric differences, particularly at
-              estimating smaller values of theta.}
+              function \code{\link{constrOptim}}.}
+
+\item{verbose}{Whether \code{gfda} prints a message when the optimization step is done. Defaults to
+\code{TRUE}.}
 }
 \value{
 List of four items

@@ -4,7 +4,7 @@
 \alias{tfpca}
 \title{Temporal Functional Principal Component}
 \usage{
-tfpca(MatY, L, t.fit, t.pred, tbas = 10)
+tfpca(MatY, L, t.fit, t.pred, lambda = 0, tbas = 20)
 }
 \arguments{
 \item{MatY}{The data organized in a matrix, with each time series in a column. Missing
@@ -15,6 +15,8 @@ values are currently not handled properly.}
 \item{t.fit}{Values of the time-domain at which a value is fitted.}
 
 \item{t.pred}{Values of the time-domain at which a predicted value needs to be produced.}
+
+\item{lambda}{Smoothness parameter, must be provided. Defaults to 0 (no smoothing).}
 
 \item{tbas}{Number of spline basis functions used in the smooth.}
 }
@@ -32,14 +34,18 @@ but rescales the eigenfunctions/eigenvalues to a scale that's needed by the \cod
 Notice \code{tfpca} do not handle NA's in the data values. It might be useful do to some
 kind of nearest neightbor imputation if possible. The \code{fda} function \code{data2fd} does
 a least-squares fit of the basis function, which can be helpful in preprocessing the data.
+The tuning parameter lambda must be passed manually.
 }
 \examples{
 # This example uses fda's CanadianWeather dataset:
 library(fda)
-test <- tfpca(CanadianWeather$dailyAv[,,"Temperature.C"], 2, 1:365, 32:60, 20)
-layout(matrix(1:2, ncol=2))
+test <- tfpca(CanadianWeather$dailyAv[,,"Temperature.C"], 2, 1:365, 32:60, 0, 20)
+test2 <- tfpca(CanadianWeather$dailyAv[,,"Temperature.C"], 2, 1:365, 32:60, 1e5, 20)
+layout(matrix(1:4, byrow = TRUE, ncol = 2))
 plot(test$vectors[,1], type="l", main="First Principal Component")
 plot(test$vectors[,2], type="l", main="Second Principal Component")
+plot(test2$vectors[,1], type="l", main="Smooth First Principal Component")
+plot(test2$vectors[,2], type="l", main="Smooth Second Principal Component")
 }
 \references{
 Ramsay, J. O. (2006) \emph{Functional Data Analysis}. New York: Springer.

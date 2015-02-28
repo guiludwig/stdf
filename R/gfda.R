@@ -15,16 +15,16 @@
 #' @param L Number of eigenfunctions in spatio-temporal covariance, defaults to 2.
 #' @param spline.df Number of spline basis for the deterministic spline component (see 
 #'                  \code{\link{bs}} function). Defaults to NULL, which uses 3 spline basis.
+#' @param fpca.lambda Smoothness parameter for the fpca function. Defaults to 0 (no smoothing).
+#'                    See \code{\link{tfpca}} function.
 #' @param fpca.df Number of spline basis for the stochastic spline component (see \code{\link{tfpca}} 
-#'                function). Defaults to 10.
+#'                function). Defaults to 20. See \code{\link{tfpca}} function.
 #' @param homogeneous Whether the variance of static and roving sensors is assumed to be the same or not. 
 #'                    Defaults to not.
-#' @param verbose Whether \code{gfda} prints information about the optimization step, defaults to 
+#' @param verbose Whether \code{gfda} prints a message when the optimization step is done. Defaults to 
 #'                \code{TRUE}.
 #' @param method Either "L-BFGS-B" or "Nelder-Mead", which are passed to the optimization
-#'               function \code{\link{constrOptim}}. Simulation results indicate
-#'               that the methods show numeric differences, particularly at 
-#'               estimating smaller values of theta. 
+#'               function \code{\link{constrOptim}}. 
 #'
 #' @export
 #' @return List of four items 
@@ -99,8 +99,9 @@
 #' @keywords Spatial Statistics
 #' @keywords Functional Data Analysis
 gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6, 
-                 L = 2, spline.df = NULL, fpca.df = 10, homogeneous = FALSE, 
-                 verbose = TRUE, method = "L-BFGS-B", ...){
+                 L = 2, spline.df = NULL, fpca.lambda = 0, fpca.df = 20, 
+                 homogeneous = FALSE, method = "L-BFGS-B",
+                 verbose = TRUE, ...){
   
   if(!is.null(subtfpca) && sum(subtfpca) == length(subtfpca)) message("Only static sensors, consider setting homogeneous = TRUE or subtfpca = NULL")
   
@@ -126,9 +127,10 @@ gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
     t.fit <- unique(training.set[subtfpca,2])
   }
   nSt <- length(t.fit)
-  Step2 <- tfpca(NoiStDe, L, t.fit, t.pred, fpca.df, ...) 
+  Step2 <- tfpca(NoiStDe, L, t.fit, t.pred, lambda = fpca.lambda, tbas = fpca.df, ...) 
   lamb.est <- Step2$values
-  Phi.est <- Phi.TR <- Phi.TE <- Step2$vectors
+  Phi.est <- Phi.TR <- Step2$vectors
+  Phi.TE <- Step2$pred.vec
   
   ##################################
   # Step3:   Spatial Parameters    #
