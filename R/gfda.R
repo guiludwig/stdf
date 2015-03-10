@@ -3,28 +3,33 @@
 #' This function is an wrapper to fitting a Geostatistical Functional Data 
 #' Analysis (GFDA) model to spatio-temporal data.
 #'
-#' @param training.set A numeric matrix with the response variable in the first column, 
-#'                     time values in the second column and X, Y coordinates in the third
-#'                     column. Corresponds to the training data.
-#' @param prediction.set Same as training.set, but corresponding to points to be predicted for 
-#'                       MSPE calculation.
-#' @param subtfpca Logical vector with the same length as the number of rows in training.set; tells
-#'                 gfda which lines should be included in the calculation of the temporal dependency
-#'                 component. Defaults to NULL, which includes all lines.
-#' @param ssensors Integer corresponding to how many static sensors in the dataset.
-#' @param L Number of eigenfunctions in spatio-temporal covariance, defaults to 2.
-#' @param spline.df Number of spline basis for the deterministic spline component (see 
-#'                  \code{\link{bs}} function). Defaults to NULL, which uses 3 spline basis.
-#' @param fpca.lambda Smoothness parameter for the fpca function. Defaults to 0 (no smoothing).
-#'                    See \code{\link{tfpca}} function.
-#' @param fpca.df Number of spline basis for the stochastic spline component (see \code{\link{tfpca}} 
-#'                function). Defaults to 20. See \code{\link{tfpca}} function.
-#' @param homogeneous Whether the variance of static and roving sensors is assumed to be the same or not. 
-#'                    Defaults to not.
-#' @param verbose Whether \code{gfda} prints a message when the optimization step is done. Defaults to 
-#'                \code{TRUE}.
-#' @param method Either "L-BFGS-B" or "Nelder-Mead", which are passed to the optimization
-#'               function \code{\link{constrOptim}}. 
+#' @param training.set A numeric matrix with the response variable in the 
+#'                     first column, time values in the second column and X, Y 
+#'                     spatial coordinates in the third column. Corresponds to 
+#'                     the training data.
+#' @param prediction.set Same as training.set, but corresponding to points to 
+#'                       be predicted for MSPE calculation.
+#' @param subtfpca Logical vector with the same length as the number of rows in 
+#'                 training.set; tells gfda which lines should be included in 
+#'                 the calculation of the temporal dependency component. 
+#'                 Defaults to NULL, which includes all lines.
+#' @param ssensors Integer corresponding to how many static sensors in the 
+#'                 dataset.
+#' @param L Number of eigenfunctions in spatio-temporal covariance, defaults 
+#'                 to 2.
+#' @param spline.df Number of spline basis for the deterministic spline 
+#'                  component (see \code{\link{bs}} function). Defaults to 
+#'                  NULL, which uses 3 spline basis.
+#' @param fpca.lambda Smoothness parameter for the fpca function. Defaults 
+#'                    to 0 (no smoothing). See \code{\link{tfpca}} function.
+#' @param fpca.df Number of spline basis for the stochastic spline component 
+#'                (see \code{\link{tfpca}} function). Defaults to 20. 
+#' @param homogeneous Whether the variance of static and roving sensors is 
+#'                    assumed to be the same or not. Defaults to FALSE.
+#' @param verbose Whether \code{gfda} prints a message when the optimization 
+#'                step is done. Defaults to \code{TRUE}.
+#' @param method Either "L-BFGS-B" or "Nelder-Mead", which are passed to the 
+#'               optimization function \code{\link{constrOptim}}. 
 #'
 #' @export
 #' @return List of four items 
@@ -35,26 +40,32 @@
 #'   \item{sigma2r}{Roving sensor variability}
 #'
 #' @examples
-#' ## library(fda)
-#' ## Y <- CanadianWeather$dailyAv
-#' ## XY <- CanadianWeather$coordinates
-#' # =sensor simulation example:
+#' # sensor simulation example, placeholder for unit tests but also shows
+#' # options available for optimization:
 #' set.seed(1)
-#' static <- cbind(rep(0, 200), rep(1:50,4), rep(c(2,2,4,4), each = 50), rep(c(2,4,2,4), each = 50))
-#' roving <- cbind(rep(0, 50), 1:50, seq(2,4, length=50), seq(2,4, length=50))
+#' static <- cbind(rep(0, 200), rep(1:50,4), 
+#'                 rep(c(2,2,4,4), each = 50), 
+#'                 rep(c(2,4,2,4), each = 50))
+#' roving <- cbind(rep(0, 50), 1:50, 
+#'                 seq(2,4, length=50), 
+#'                 seq(2,4, length=50))
 #' prediction <- cbind(rep(0, 50), 1:50, 3, 3)
 #' complete <- rbind(static, roving, prediction)
 #' D <- matrix(0, 300, 300)
-#' for(i in 1:300) D[i,] <- sqrt((complete[i,3] - complete[,3])^2 + (complete[i,4] - complete[,4])^2)
+#' for(i in 1:300) D[i,] <- sqrt((complete[i,3] - complete[,3])^2 + 
+#'                               (complete[i,4] - complete[,4])^2)
 #' S <- matrix(0, 300, 300)
-#' Phi <- cbind(sin(2*pi*complete[,2]/50), cos(2*pi*complete[,2]/50), 2*sin(4*pi*complete[,2]/50))
+#' Phi <- cbind(sin(2*pi*complete[,2]/50), 
+#'              cos(2*pi*complete[,2]/50), 
+#'              2*sin(4*pi*complete[,2]/50))
 #' sigmaR <- 2
 #' sigmaS <- 1
 #' theta <- 1:3
 #' for(L in 1:3) S <- S + exp(-D/theta[L])*outer(Phi[,L], Phi[,L])
 #' diag(S) <- diag(S) + sigmaS
 #' diag(S)[201:250] <- diag(S)[201:250] - sigmaS + sigmaR
-#' complete[,1] <- 2 + 2*complete[,3] + 2*complete[,4] + 2*cos(4*pi*complete[,2]/50) + 
+#' complete[,1] <- 2 + 2*complete[,3] + 2*complete[,4] + 
+#'                 2*cos(4*pi*complete[,2]/50) + 
 #'                 t(chol(S)) %*% rnorm(300)
 #' static[,1] <- complete[1:200,1]
 #' roving[,1] <- complete[201:250,1]
@@ -68,7 +79,8 @@
 #' results
 #' resultsNM
 #' # Compare with fitting homogeneous case
-#' resultsH <- gfda(static, prediction, ssensors = 4, L = 3, homogeneous = TRUE)
+#' resultsH <- gfda(static, prediction, ssensors = 4, L = 3, 
+#'                  homogeneous = TRUE)
 #' resultsHNM <- gfda(static, prediction, ssensors = 4, L = 3, 
 #'                    homogeneous = TRUE, method = "Nelder-Mead")
 #'                    
@@ -79,7 +91,7 @@
 #' system.time({resultsPlusRovingNM <- gfda(rbind(static, roving), prediction, 
 #'                             subtfpca = c(rep(TRUE,200), rep(FALSE,50)), 
 #'                             ssensors = 4, L = 3, method = "Nelder-Mead")})
-#' # Results should be almost the same, bar numberical accuracy issues
+#' # Results should be almost the same, bar numerical accuracy issues
 #' resultsPlusRoving
 #' resultsPlusRovingNM
 #' # Forces homogeneous model:                         
@@ -87,8 +99,25 @@
 #'                           subtfpca = c(rep(TRUE,200), rep(FALSE,50)), 
 #'                           ssensors = 4, L = 3, homogeneous = TRUE)
 #' 
+#' # Example with dataset from fda package; this dataset is
+#' # huge and takes a long time to run.
+#' \dontrun{
+#' library(fda)
+#' n <- 35 # stations
+#' Y <- as.numeric(CanadianWeather$dailyAv[ , ,"Temperature.C"])
+#' XY <- cbind(Y, 
+#'             rep(1:365, n),  
+#'             rep(CanadianWeather$coordinates[, "N.latitude"], each = 365), 
+#'             rep(CanadianWeather$coordinates[, "W.longitude"], each = 365))
+#' fakePred <- XY[1:3,]
+#' model <- gfda(XY, fakePred, ssensors = n, homogeneous = TRUE,
+#'               L = 2, fpca.lambda = 1e5)
+#' # Creating a hazard map requires the ggplot2 package
+#' # TODO
+#' }
+#'   
 #' @author Guilherme Ludwig and Tingjin Chu
-#' 
+#'
 #' @references
 #' 
 #'   Chu, T., Zhu, J. and Wang, H. (2014) On Semiparametric Inference of Geostatistical Models via Local Karhunen-Loeve Expansion. \emph{Journal of the Royal Statistical Society}, 76, 817-832.
