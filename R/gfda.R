@@ -244,10 +244,12 @@ gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
   
   # Evaluate loadings
   
-  static.loadings <- crossprod(Phi.TR, solve(psi.cov, matrix(resid[subsetStatic], ncol = ssensors)))
+  static.loadings <- crossprod(Phi.TR, matrix(solve(psi.cov, resid)[as.logical(subsetStatic)], ncol = ssensors))
   for(ell in 1:L)
     static.loadings[,ell] <- lamb.est[ell]*static.loadings[,ell]
-    
+  colnames(static.loadings) <- paste0("curve ",1:ncol(static.loadings))
+  static.loadings <- t(static.loadings)
+  
   # Starts Kriging
   
   DKrig <- psi.krig <- matrix(0, nrow = nTR, ncol = nTS)        
