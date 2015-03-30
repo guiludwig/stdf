@@ -54,6 +54,7 @@ List of four items
   \item{spatCov}{Theta parameters for stochastic term}
   \item{sigma2s}{Static sensor variability}
   \item{sigma2r}{Roving sensor variability}
+  \item{static.loadings}{Loadings for the static sensors}
 }
 \description{
 This function is an wrapper to fitting a Geostatistical Functional Data
