@@ -161,9 +161,7 @@ gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
   Phi.est <- Phi.TR <- Step2$vectors
   Phi.TE <- Step2$pred.vec
   
-  ##################################
-  # Step3:   Spatial Parameters    #
-  ##################################
+  # Step3:   Spatial Parameters
   
   DTR <- matrix(0, nrow = nTR, ncol = nTR)  
   for(i in 1:nTR) {
@@ -224,7 +222,6 @@ gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
     }
   } 
   
-  
   theta <- prof.max$par
   if(is.null(subtfpca) & !homogeneous) {
     theta <- theta[-length(theta)] 
@@ -245,6 +242,12 @@ gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
   beta.est <- solve(crossprod(XTR, solve(psi.cov, XTR)), crossprod(XTR, solve(psi.cov, YTR)))
   resid <- YTR-XTR%*%beta.est
   
+  # Evaluate loadings
+  
+  static.loadings <- crossprod(Phi.TR, solve(psi.cov, matrix(resid[subsetStatic], ncol = ssensors)))
+  for(ell in 1:L)
+    static.loadings[,ell] <- lamb.est[ell]*static.loadings[,ell]
+    
   # Starts Kriging
   
   DKrig <- psi.krig <- matrix(0, nrow = nTR, ncol = nTS)        
@@ -268,5 +271,6 @@ gfda <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
   ret$sigma2s <- theta[L+1]
   if(!is.na(theta[L+2]))
     ret$sigma2r <- theta[L+2]
+  ret$static.loadings <- static.loadings
   return(ret)
 }

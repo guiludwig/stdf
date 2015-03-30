@@ -9,7 +9,7 @@ Imports:
 LinkingTo: Rcpp, RcppEigen
 Type: Package
 Title: Geostatistical Functional Data Analysis model
-Version: 0.2.5
+Version: 0.2.6
 Author: Guilherme Ludwig [aut, cre],
   Tingjin Chu [aut]
 Maintainer: Guilherme Ludwig <gvludwig@stat.wisc.edu>
