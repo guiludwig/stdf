@@ -1,4 +1,4 @@
-useDynLib(gfda)
+useDynLib(stdf)
 exportPattern("^[[:alpha:]]+")
 import(splines)
 import(fda)

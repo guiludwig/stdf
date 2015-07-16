@@ -1,4 +1,4 @@
-Package: gfda
+Package: stdf
 Depends:
     R (>= 3.1.0),
     splines,
@@ -8,14 +8,13 @@ Imports:
     RcppEigen (>= 0.3.2.2.0)
 LinkingTo: Rcpp, RcppEigen
 Type: Package
-Title: Geostatistical Functional Data Analysis model
+Title: Spatio-Temporal data fusion model
 Version: 0.2.6
 Author: Guilherme Ludwig [aut, cre],
   Tingjin Chu [aut]
 Maintainer: Guilherme Ludwig <gvludwig@stat.wisc.edu>
 License: GPL (>= 2)
 Date: 2015-01-05
-Description: This package calculates the Geostatistical Functional
-    Data Analysis model of Chu, Zhu and Wang (2014) and Ludwig, Chu, 
-    Zhu, Wang and Koehler (to appear). It uses a fast RcppEigen 
-    implementation to optimize its terms.
+Description: This package implements the Spatio-Temporal data fusion 
+    model developed in Ludwig, Chu, Zhu, Wang and Koehler (to appear). 
+    It uses the RcppEigen package for efficient computation.
