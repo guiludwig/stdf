@@ -1,5 +1,5 @@
 useDynLib(stdf)
-exportPattern("^[[:alpha:]]+")
+export("stdf","tfpca","print.stdf")
 import(splines)
 import(fda)
 import(RcppEigen)

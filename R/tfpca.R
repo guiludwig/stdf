@@ -1,9 +1,9 @@
 #' Temporal Functional Principal Component
 #'
-#' This function is used on step II of the GFDA algorithm by Chu, Zhu and Wang (2014). It does 
-#' not need to be used directly, since it's mostly an wrapper to function calls from J. O. Ramsay 
-#' et al.'s \code{fda} package function calls. It behaves similarly to the \code{pca.fd} function, 
-#' but rescales the eigenfunctions/eigenvalues to a scale that's needed by the \code{gfda} function.
+#' This function is used on step II of the STDF algorithm. It does not need to be used 
+#' directly, since it's mostly an wrapper to \code{fda} package function calls. It 
+#' behaves similarly to the \code{pca.fd} function, but rescales the 
+#' eigenfunctions/eigenvalues in a way that's needed by the \code{stdf} function.
 #' Notice \code{tfpca} do not handle NA's in the data values. It might be useful do to some
 #' kind of nearest neightbor imputation if possible. The \code{fda} function \code{data2fd} does
 #' a least-squares fit of the basis function, which can be helpful in preprocessing the data.
@@ -37,7 +37,7 @@
 #' @references
 #'  Ramsay, J. O. (2006) \emph{Functional Data Analysis}. New York: Springer.
 #'
-#' @seealso \code{\link{pca.fd}}, \code{\link{gfda}}
+#' @seealso \code{\link{pca.fd}}, \code{\link{stdf}}
 #' @keywords Spatial Statistics
 #' @keywords Functional Data Analysis
 tfpca <- function(MatY, L, t.fit, t.pred, lambda = 0, tbas = 20){

@@ -2,18 +2,18 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 dlogProfileCpp <- function(theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst) {
-    .Call('gfda_dlogProfileCpp', PACKAGE = 'gfda', theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst)
+    .Call('stdf_dlogProfileCpp', PACKAGE = 'stdf', theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst)
 }
 
 dlogProfileCppH <- function(theta, DTR, Y, XTR, PhiTime, LambEst) {
-    .Call('gfda_dlogProfileCppH', PACKAGE = 'gfda', theta, DTR, Y, XTR, PhiTime, LambEst)
+    .Call('stdf_dlogProfileCppH', PACKAGE = 'stdf', theta, DTR, Y, XTR, PhiTime, LambEst)
 }
 
 logProfileCpp <- function(theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst) {
-    .Call('gfda_logProfileCpp', PACKAGE = 'gfda', theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst)
+    .Call('stdf_logProfileCpp', PACKAGE = 'stdf', theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst)
 }
 
 logProfileCppH <- function(theta, DTR, Y, XTR, PhiTime, LambEst) {
-    .Call('gfda_logProfileCppH', PACKAGE = 'gfda', theta, DTR, Y, XTR, PhiTime, LambEst)
+    .Call('stdf_logProfileCppH', PACKAGE = 'stdf', theta, DTR, Y, XTR, PhiTime, LambEst)
 }
 

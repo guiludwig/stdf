@@ -132,9 +132,9 @@
 #' @keywords Spatial Statistics
 #' @keywords Functional Data Analysis
 stdf <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6, 
-                 L = 2, spline.df = NULL, fpca.lambda = 0, fpca.df = 20, 
-                 homogeneous = FALSE, method = "L-BFGS-B",
-                 verbose = TRUE, ...){
+                         L = 2, spline.df = NULL, fpca.lambda = 0, fpca.df = 20, 
+                         homogeneous = FALSE, method = "L-BFGS-B",
+                         verbose = TRUE, ...){
   
   if(!is.null(subtfpca) && sum(subtfpca) == length(subtfpca)) message("Only static sensors, consider setting homogeneous = TRUE or subtfpca = NULL")
   
@@ -281,6 +281,6 @@ stdf <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
   ret$static.loadings <- static.loadings
   ret$phi <- Phi.est[order(t.fit),]
   ret$times <- sort(t.fit)
-  class(ret) <- "stdf"
+  class(ret) <- append(class(ret), "stdf")
   return(ret)
 }
