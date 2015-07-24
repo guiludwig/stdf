@@ -4,18 +4,15 @@
 \alias{stdf}
 \title{STDF model}
 \usage{
-stdf(training.set, prediction.set, subtfpca = NULL, ssensors = 6, L = 2,
+stdf(training.set, subtfpca = NULL, ssensors = 6, L = 2,
   spline.df = NULL, fpca.lambda = 0, fpca.df = 20, homogeneous = FALSE,
-  method = "L-BFGS-B", verbose = TRUE, ...)
+  method = c("L-BFGS-B", "Nelder-Mead"), verbose = TRUE, ...)
 }
 \arguments{
 \item{training.set}{A numeric matrix with the response variable in the
 first column, time values in the second column and X, Y
 spatial coordinates in the third column. Corresponds to
 the training data.}
-
-\item{prediction.set}{Same as training.set, but corresponding to points to
-be predicted for MSPE calculation.}
 
 \item{subtfpca}{Logical vector with the same length as the number of rows in
 training.set; tells stdf which lines should be included in
@@ -48,16 +45,13 @@ assumed to be the same or not. Defaults to FALSE.}
 step is done. Defaults to \code{TRUE}.}
 }
 \value{
-List of eight items
+\code{stdf} returns an object of \code{\link{class}} "stdf" containing
+at least the following components
   \item{beta.est}{Coefficient estimates}
   \item{MSPEKrig}{Mean squared Kriging Prediction error}
   \item{spatCov}{Theta parameters for stochastic term}
-  \item{sigma2s}{Static sensor variability}
-  \item{sigma2r}{Roving sensor variability}
-  \item{static.loadings}{Loadings for the static sensors}
-  \item{phi}{Estimates of the eigenfunctions evaluated at unique
-             observed times in the dataset, sorted}
-  \item{times}{sorted unique observed times in the dataset}
+  \item{sigma2s}{Static sensor variance estimate}
+  \item{sigma2r}{Roving sensor variance estimate}
 }
 \description{
 This function is an wrapper to fitting a Spatio-Temporal Data
@@ -95,31 +89,31 @@ static[,1] <- complete[1:200,1]
 roving[,1] <- complete[201:250,1]
 prediction[,1] <- complete[251:300,1]
 
-results <- stdf(static, prediction, ssensors = 4, L = 3)
-resultsNM <- stdf(static, prediction, ssensors = 4, L = 3,
+results <- stdf(static, ssensors = 4, L = 3)
+resultsNM <- stdf(static, sensors = 4, L = 3,
                   method = "Nelder-Mead")
 # Compare results of using "L-BFGS-B" and "Nelder-Mead";
 # Should be almost the same, bar numberical accuracy issues
 results
 resultsNM
 # Compare with fitting homogeneous case
-resultsH <- stdf(static, prediction, ssensors = 4, L = 3,
+resultsH <- stdf(static, ssensors = 4, L = 3,
                  homogeneous = TRUE)
-resultsHNM <- stdf(static, prediction, ssensors = 4, L = 3,
+resultsHNM <- stdf(static, ssensors = 4, L = 3,
                    homogeneous = TRUE, method = "Nelder-Mead")
 
 # Nelder-Mead is more time-consuming, for example in this case:
-system.time({resultsPlusRoving <- stdf(rbind(static, roving), prediction,
+system.time({resultsPlusRoving <- stdf(rbind(static, roving),
                           subtfpca = c(rep(TRUE,200), rep(FALSE,50)),
                           ssensors = 4, L = 3)})
-system.time({resultsPlusRovingNM <- stdf(rbind(static, roving), prediction,
+system.time({resultsPlusRovingNM <- stdf(rbind(static, roving),
                             subtfpca = c(rep(TRUE,200), rep(FALSE,50)),
                             ssensors = 4, L = 3, method = "Nelder-Mead")})
 # Results should be almost the same, bar numerical accuracy issues
 resultsPlusRoving
 resultsPlusRovingNM
 # Forces homogeneous model:
-resultsPlusRovingH <- stdf(rbind(static, roving), prediction,
+resultsPlusRovingH <- stdf(rbind(static, roving),
                           subtfpca = c(rep(TRUE,200), rep(FALSE,50)),
                           ssensors = 4, L = 3, homogeneous = TRUE)
 
@@ -134,7 +128,7 @@ XY <- cbind(Y,
             rep(CanadianWeather$coordinates[, "N.latitude"], each = 365),
             rep(CanadianWeather$coordinates[, "W.longitude"], each = 365))
 fakePred <- XY[1:3,]
-model <- stdf(XY, fakePred, ssensors = n, homogeneous = TRUE,
+model <- stdf(XY, ssensors = n, homogeneous = TRUE,
               L = 2, fpca.lambda = 1e5)
 # Creating a hazard map requires the ggplot2 package
 # TODO
@@ -146,7 +140,7 @@ Guilherme Ludwig and Tingjin Chu
 \references{
 Chu, T., Zhu, J. and Wang, H. (2014) On Semiparametric Inference of Geostatistical Models via Local Karhunen-Loeve Expansion. \emph{Journal of the Royal Statistical Society}, 76, 817-832.
 
-  Ludwig, G., Chu, T., Zhu, J., Wang, H. and Koehler, K. (2015) A Geostatistical Functional Data Analysis Approach to Combining Static and Roving Sensor Data for Environmental Hazard Mapping, \emph{to appear}.
+  Ludwig, G., Chu, T., Zhu, J., Wang, H. and Koehler, K. (2015) Static and Roving Sensor Data Fusion for Spatio-Temporal Mapping with Application to Occupational Exposure Assessment, \emph{to appear}.
 }
 \seealso{
 \code{\link{tfpca}}

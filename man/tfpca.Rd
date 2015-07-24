@@ -4,7 +4,7 @@
 \alias{tfpca}
 \title{Temporal Functional Principal Component}
 \usage{
-tfpca(MatY, L, t.fit, t.pred, lambda = 0, tbas = 20)
+tfpca(MatY, L, t.fit, lambda = 0, tbas = 20)
 }
 \arguments{
 \item{MatY}{The data organized in a matrix, with each time series in a column. Missing
@@ -14,8 +14,6 @@ values are currently not handled properly.}
 
 \item{t.fit}{Values of the time-domain at which a value is fitted.}
 
-\item{t.pred}{Values of the time-domain at which a predicted value needs to be produced.}
-
 \item{lambda}{Smoothness parameter, must be provided. Defaults to 0 (no smoothing).}
 
 \item{tbas}{Number of spline basis functions used in the smooth.}
@@ -24,7 +22,12 @@ values are currently not handled properly.}
 List of three items
   \item{values}{numeric vector of L Eigenvalue estimates}
   \item{vectors}{matrix of L columns with Eigenfunction estimates observed at t.fit}
-  \item{pred.vec}{matrix of L columns with Eigenfunction estimates observed at t.pred}
+  \item{harmfd}{Internal use. Prediction of the Eigenfunction at new values of t,
+                say under vector t.pred, can be obtained with the next three
+                parameters. The syntax is
+                fda::eval.fd(t.pred, harmfd)*t(matrix(sqrt(nObs/etan), L, length(t.pred)))}
+  \item{nObs}{Internal use. }
+  \item{etan}{Internal use. }
 }
 \description{
 This function is used on step II of the STDF algorithm. It does not need to be used

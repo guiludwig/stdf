@@ -30,16 +30,13 @@
 #'               optimization function \code{\link{constrOptim}}. 
 #'
 #' @export
-#' @return List of eight items 
+#' @return \code{stdf} returns an object of \code{\link{class}} "stdf" containing 
+#' at least the following components
 #'   \item{beta.est}{Coefficient estimates}
 #'   \item{MSPEKrig}{Mean squared Kriging Prediction error}
 #'   \item{spatCov}{Theta parameters for stochastic term}
-#'   \item{sigma2s}{Static sensor variability}
-#'   \item{sigma2r}{Roving sensor variability}
-#'   \item{static.loadings}{Loadings for the static sensors}
-#'   \item{phi}{Estimates of the eigenfunctions evaluated at unique
-#'              observed times in the dataset, sorted}
-#'   \item{times}{sorted unique observed times in the dataset}
+#'   \item{sigma2s}{Static sensor variance estimate}
+#'   \item{sigma2r}{Roving sensor variance estimate}
 #'
 #' @examples
 #' # sensor simulation example, placeholder for unit tests but also shows
@@ -73,31 +70,31 @@
 #' roving[,1] <- complete[201:250,1]
 #' prediction[,1] <- complete[251:300,1]
 #' 
-#' results <- stdf(static, prediction, ssensors = 4, L = 3)
-#' resultsNM <- stdf(static, prediction, ssensors = 4, L = 3, 
+#' results <- stdf(static, ssensors = 4, L = 3)
+#' resultsNM <- stdf(static, sensors = 4, L = 3, 
 #'                   method = "Nelder-Mead")
 #' # Compare results of using "L-BFGS-B" and "Nelder-Mead";
 #' # Should be almost the same, bar numberical accuracy issues
 #' results
 #' resultsNM
 #' # Compare with fitting homogeneous case
-#' resultsH <- stdf(static, prediction, ssensors = 4, L = 3, 
+#' resultsH <- stdf(static, ssensors = 4, L = 3, 
 #'                  homogeneous = TRUE)
-#' resultsHNM <- stdf(static, prediction, ssensors = 4, L = 3, 
+#' resultsHNM <- stdf(static, ssensors = 4, L = 3, 
 #'                    homogeneous = TRUE, method = "Nelder-Mead")
 #'                    
 #' # Nelder-Mead is more time-consuming, for example in this case:
-#' system.time({resultsPlusRoving <- stdf(rbind(static, roving), prediction, 
+#' system.time({resultsPlusRoving <- stdf(rbind(static, roving), 
 #'                           subtfpca = c(rep(TRUE,200), rep(FALSE,50)), 
 #'                           ssensors = 4, L = 3)})
-#' system.time({resultsPlusRovingNM <- stdf(rbind(static, roving), prediction, 
+#' system.time({resultsPlusRovingNM <- stdf(rbind(static, roving), 
 #'                             subtfpca = c(rep(TRUE,200), rep(FALSE,50)), 
 #'                             ssensors = 4, L = 3, method = "Nelder-Mead")})
 #' # Results should be almost the same, bar numerical accuracy issues
 #' resultsPlusRoving
 #' resultsPlusRovingNM
 #' # Forces homogeneous model:                         
-#' resultsPlusRovingH <- stdf(rbind(static, roving), prediction, 
+#' resultsPlusRovingH <- stdf(rbind(static, roving), 
 #'                           subtfpca = c(rep(TRUE,200), rep(FALSE,50)), 
 #'                           ssensors = 4, L = 3, homogeneous = TRUE)
 #' 
@@ -112,7 +109,7 @@
 #'             rep(CanadianWeather$coordinates[, "N.latitude"], each = 365), 
 #'             rep(CanadianWeather$coordinates[, "W.longitude"], each = 365))
 #' fakePred <- XY[1:3,]
-#' model <- stdf(XY, fakePred, ssensors = n, homogeneous = TRUE,
+#' model <- stdf(XY, ssensors = n, homogeneous = TRUE,
 #'               L = 2, fpca.lambda = 1e5)
 #' # Creating a hazard map requires the ggplot2 package
 #' # TODO
@@ -124,7 +121,7 @@
 #' 
 #'   Chu, T., Zhu, J. and Wang, H. (2014) On Semiparametric Inference of Geostatistical Models via Local Karhunen-Loeve Expansion. \emph{Journal of the Royal Statistical Society}, 76, 817-832.
 #'   
-#'   Ludwig, G., Chu, T., Zhu, J., Wang, H. and Koehler, K. (2015) A Geostatistical Functional Data Analysis Approach to Combining Static and Roving Sensor Data for Environmental Hazard Mapping, \emph{to appear}.
+#'   Ludwig, G., Chu, T., Zhu, J., Wang, H. and Koehler, K. (2015) Static and Roving Sensor Data Fusion for Spatio-Temporal Mapping with Application to Occupational Exposure Assessment, \emph{to appear}.
 #'
 #' @seealso \code{\link{tfpca}}
 #' @keywords Spatial Statistics
@@ -235,36 +232,23 @@ stdf <- function(training.set, subtfpca = NULL, ssensors = 6,
   beta.est <- solve(crossprod(XTR, solve(psi.cov, XTR)), crossprod(XTR, solve(psi.cov, YTR)))
   resid <- YTR-XTR%*%beta.est
   
-  # Starts Kriging
-  
-  nTS <- nrow(prediction.set)
-  t.pred <- unique(prediction.set[ ,2])
-  DKrig <- matrix(0, nrow = nTR, ncol = nTS)        
-  
-  for(i in 1:nTR) {
-    DKrig[i,] <- sqrt((training.set[i,3] - prediction.set[,3])^2 + (training.set[i,4] - prediction.set[,4])^2)
-  }
-  
-  # PhiTimeTE <- Phi.est[match(prediction.set[ ,2], t.pred), ]
-  # Does not work if ! t.pred %in% t.fit
-  PhiTimeTE <- with(Step2, fda::eval.fd(t.pred, harmfd)*t(matrix(sqrt(nObs/etan), L, length(t.pred))))
-  psi.krig <- evalPsi(DKrig, L, lamb.est, theta, PhiTime, PhiTimeTE,
-                      homogeneous, subsetStatic, kriging = TRUE)
-  
-  XTE <- cbind(1, prediction.set[,3:4], splines::bs(prediction.set[ ,2], df = spline.df))
-  YKrig <- XTE%*%beta.est+crossprod(psi.krig, solve(psi.cov, resid))
-  MSPEKrig <- mean((prediction.set[,1]-YKrig)^2)
-  
   beta.est <- as.numeric(beta.est)
   names(beta.est) <- c("b0", "bx", "by",
                        paste0("sp", seq_len(length(beta.est)-3))) 
-  ret <- list(beta.est = beta.est, MSPEKrig = MSPEKrig, spatCov = theta[1:L])
+  ret <- list(beta.est = beta.est, spatCov = theta[1:L])
   ret$sigma2s <- theta[L+1]
   if(!is.na(theta[L+2]))
     ret$sigma2r <- theta[L+2]
   ret$phi <- Phi.est[order(t.fit),]
   ret$times <- sort(t.fit)
   ret$tfpca.params <- Step2
+  ret$training.set <- training.set
+  ret$training.set <- training.set
+  ret$training.set <- training.set
+  ret$subtfpca <- subtfpca
+  ret$homogeneous <- homogeneous
+  ret$resid <- resid
+  ret$spline.df <- spline.df
   class(ret) <- append(class(ret), "stdf")
   return(ret)
 }
