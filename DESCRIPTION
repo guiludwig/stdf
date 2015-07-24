@@ -9,12 +9,12 @@ Imports:
 LinkingTo: Rcpp, RcppEigen
 Type: Package
 Title: Spatio-Temporal data fusion model
-Version: 0.2.6
+Version: 0.2.7
 Author: Guilherme Ludwig [aut, cre],
   Tingjin Chu [aut]
 Maintainer: Guilherme Ludwig <gvludwig@stat.wisc.edu>
 License: GPL (>= 2)
-Date: 2015-01-05
+Date: 2015-07-24
 Description: This package implements the Spatio-Temporal data fusion 
     model developed in Ludwig, Chu, Zhu, Wang and Koehler (to appear). 
     It uses the RcppEigen package for efficient computation.
