@@ -1,5 +1,6 @@
 predict.stdf <- function(model, newdata = NULL, 
-                         what = c("fit", "predict", "loadings")) {
+                         what = c("fit", "predict", "loadings"), 
+                         loadings.range = list(x = c(0,1), y = c(0,1), mesh = 20)) {
   what <- match.arg(what)
   if(what == "predict" & !is.data.frame(newdata)){
     stop("Please provide a \"newdata\" object with entries matching the training.set columns.")
@@ -60,17 +61,26 @@ predict.stdf <- function(model, newdata = NULL,
     ret <- list(fitted = YKrig, MSPEKrig = MSPEKrig)
   } else if(what == "loadings"){
     # Evaluate loadings
-    
-    static.loadings <- crossprod(Phi.est[order(t.fit),], 
-                                 matrix(solve(psi.cov, model$resid)[as.logical(subsetStatic)],
-                                        ncol = ssensors)[order(t.fit),])
-    for(ell in 1:L)
-      static.loadings[ell,] <- lamb.est[ell]*static.loadings[ell,]
-    colnames(static.loadings) <- paste0("curve ",1:ncol(static.loadings))
-    static.loadings <- t(static.loadings)
-    ret$static.loadings <- static.loadings
+    new.s <- with(loadings.range, expand.grid(x = seq(x[1], x[2], length.out = mesh), 
+                                              y = seq(y[1], y[2], length.out = mesh)))
+    nTS <- nrow(new.s)
+    ret <- list()
+    DKrig <- matrix(0, nrow = nTR, ncol = nTS)        
+    for(i in 1:nTR) {
+      DKrig[i,] <- sqrt((training.set[i,3] - new.s$x)^2 + 
+                          (training.set[i,4] - new.s$y)^2)
+    }  
+    for(j in 1:L){
+      tempPsi <- lamb.est[j]*exp(-DKrig/theta[j])
+      tempLoad <- -1*crossprod(tempPsi, solve(psi.cov, model$resid))
+      ret[[j]] <- matrix(as.numeric(tempLoad), nrow = loadings.range$mesh)
+    }
+    ret$loadings.range <- new.s
   }
   
   class(ret) <- "stdfPred"
   return(ret)
 }
+
+# a <- predict(results, what="loadings", loadings.range = list(x = c(1,5), y = c(1,5), mesh = 20))
+# image(a[[1]])
