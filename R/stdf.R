@@ -7,8 +7,6 @@
 #'                     first column, time values in the second column and X, Y 
 #'                     spatial coordinates in the third column. Corresponds to 
 #'                     the training data.
-#' @param prediction.set Same as training.set, but corresponding to points to 
-#'                       be predicted for MSPE calculation.
 #' @param subtfpca Logical vector with the same length as the number of rows in 
 #'                 training.set; tells stdf which lines should be included in 
 #'                 the calculation of the temporal dependency component. 
@@ -131,16 +129,16 @@
 #' @seealso \code{\link{tfpca}}
 #' @keywords Spatial Statistics
 #' @keywords Functional Data Analysis
-stdf <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6, 
-                         L = 2, spline.df = NULL, fpca.lambda = 0, fpca.df = 20, 
-                         homogeneous = FALSE, method = "L-BFGS-B",
-                         verbose = TRUE, ...){
+stdf <- function(training.set, subtfpca = NULL, ssensors = 6, 
+                 L = 2, spline.df = NULL, fpca.lambda = 0, fpca.df = 20, 
+                 homogeneous = FALSE, 
+                 method = c("L-BFGS-B","Nelder-Mead"),
+                 verbose = TRUE, ...){
   
   if(!is.null(subtfpca) && sum(subtfpca) == length(subtfpca)) message("Only static sensors, consider setting homogeneous = TRUE or subtfpca = NULL")
+  method <- match.arg(method)
   
   nTR <- nrow(training.set)
-  nTS <- nrow(prediction.set)
-  nT <- nTR + nTS
   
   #!# XTR <- cbind(1, x, y, S(t))
   XTR <- cbind(1, training.set[ ,3:4], splines::bs(training.set[ ,2], df = spline.df))
@@ -151,19 +149,16 @@ stdf <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
   training.set.detrended[,1] <- Step1$residuals
   
   if(is.null(subtfpca)){
-    NoiStDe <- matrix(training.set.detrended[, 1], ncol = ssensors) #!# IMPORTANT
-    t.pred <- unique(prediction.set[ ,2])
+    NoiStDe <- matrix(training.set.detrended[, 1], ncol = ssensors)
     t.fit <- unique(training.set[ ,2])
   } else {
-    NoiStDe <- matrix(training.set.detrended[subtfpca, 1], ncol = ssensors) #!# IMPORTANT
-    t.pred <- unique(prediction.set[ ,2])
+    NoiStDe <- matrix(training.set.detrended[subtfpca, 1], ncol = ssensors)
     t.fit <- unique(training.set[subtfpca,2])
   }
   nSt <- length(t.fit)
-  Step2 <- tfpca(NoiStDe, L, t.fit, t.pred, lambda = fpca.lambda, tbas = fpca.df, ...) 
+  Step2 <- tfpca(NoiStDe, L, t.fit, lambda = fpca.lambda, tbas = fpca.df, ...) 
   lamb.est <- Step2$values
   Phi.est <- Step2$vectors
-  Phi.TE <- Step2$pred.vec
   
   # Step3:   Spatial Parameters
   
@@ -234,53 +229,42 @@ stdf <- function(training.set, prediction.set, subtfpca = NULL, ssensors = 6,
   if(verbose) cat("Optimization done. \n")
   
   PhiTime <- Phi.est[match(training.set[ ,2], t.fit),]
-  psi.cov <- matrix(0, nrow = nTR, ncol = nTR)
-  for(j in 1:L){
-    psi.cov <- psi.cov + lamb.est[j]*exp(-DTR/theta[j])*outer(PhiTime[,j],PhiTime[,j])
-  }
-  diag(psi.cov) <- diag(psi.cov) + theta[L+1]
-  if (!homogeneous & sum(subsetStatic) < length(subsetStatic)){
-    diag(psi.cov) <- diag(psi.cov) + (theta[L+2] - theta[L+1])*(1-subsetStatic)
-  } 
+  psi.cov <- evalPsi(DTR, L, lamb.est, theta, PhiTime, PhiTimeTE = NULL,
+                     homogeneous, subsetStatic, kriging = FALSE)
   
   beta.est <- solve(crossprod(XTR, solve(psi.cov, XTR)), crossprod(XTR, solve(psi.cov, YTR)))
   resid <- YTR-XTR%*%beta.est
   
-  # Evaluate loadings
-  
-  static.loadings <- crossprod(Phi.est[order(t.fit),], 
-                               matrix(solve(psi.cov, resid)[as.logical(subsetStatic)], ncol = ssensors)[order(t.fit),])
-  for(ell in 1:L)
-    static.loadings[ell,] <- lamb.est[ell]*static.loadings[ell,]
-  colnames(static.loadings) <- paste0("curve ",1:ncol(static.loadings))
-  static.loadings <- t(static.loadings)
-  
   # Starts Kriging
   
-  DKrig <- psi.krig <- matrix(0, nrow = nTR, ncol = nTS)        
+  nTS <- nrow(prediction.set)
+  t.pred <- unique(prediction.set[ ,2])
+  DKrig <- matrix(0, nrow = nTR, ncol = nTS)        
   
   for(i in 1:nTR) {
     DKrig[i,] <- sqrt((training.set[i,3] - prediction.set[,3])^2 + (training.set[i,4] - prediction.set[,4])^2)
   }
   
-  PhiTimeTE <- Phi.est[match(prediction.set[ ,2], t.pred), ]
-  for(j in 1:L){
-    psi.krig <- psi.krig + lamb.est[j]*exp(-DKrig/theta[j])*outer(PhiTime[,j],PhiTimeTE[,j])
-  }
+  # PhiTimeTE <- Phi.est[match(prediction.set[ ,2], t.pred), ]
+  # Does not work if ! t.pred %in% t.fit
+  PhiTimeTE <- with(Step2, fda::eval.fd(t.pred, harmfd)*t(matrix(sqrt(nObs/etan), L, length(t.pred))))
+  psi.krig <- evalPsi(DKrig, L, lamb.est, theta, PhiTime, PhiTimeTE,
+                      homogeneous, subsetStatic, kriging = TRUE)
   
   XTE <- cbind(1, prediction.set[,3:4], splines::bs(prediction.set[ ,2], df = spline.df))
   YKrig <- XTE%*%beta.est+crossprod(psi.krig, solve(psi.cov, resid))
   MSPEKrig <- mean((prediction.set[,1]-YKrig)^2)
   
   beta.est <- as.numeric(beta.est)
-  names(beta.est) <- c("b0", "bx", "by", paste0("sp", seq_len(length(beta.est)-3))) # 3 basis function, time using defaults
+  names(beta.est) <- c("b0", "bx", "by",
+                       paste0("sp", seq_len(length(beta.est)-3))) 
   ret <- list(beta.est = beta.est, MSPEKrig = MSPEKrig, spatCov = theta[1:L])
   ret$sigma2s <- theta[L+1]
   if(!is.na(theta[L+2]))
     ret$sigma2r <- theta[L+2]
-  ret$static.loadings <- static.loadings
   ret$phi <- Phi.est[order(t.fit),]
   ret$times <- sort(t.fit)
+  ret$tfpca.params <- Step2
   class(ret) <- append(class(ret), "stdf")
   return(ret)
 }

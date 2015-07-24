@@ -1,0 +1,3 @@
+plot.stdf <- function(model) {
+  
+}

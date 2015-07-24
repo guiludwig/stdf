@@ -1,0 +1,3 @@
+residuals.stdf <- function(model) {
+  
+}

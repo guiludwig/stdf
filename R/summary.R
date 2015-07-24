@@ -1,0 +1,3 @@
+summary.stdf <- function(model) {
+  
+}

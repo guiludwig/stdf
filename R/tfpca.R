@@ -13,7 +13,6 @@
 #' values are currently not handled properly.
 #' @param L The number of functional principal components to be returned.
 #' @param t.fit Values of the time-domain at which a value is fitted.
-#' @param t.pred Values of the time-domain at which a predicted value needs to be produced.
 #' @param lambda Smoothness parameter, must be provided. Defaults to 0 (no smoothing).
 #' @param tbas Number of spline basis functions used in the smooth.
 #'
@@ -21,7 +20,12 @@
 #' @return List of three items 
 #'   \item{values}{numeric vector of L Eigenvalue estimates}
 #'   \item{vectors}{matrix of L columns with Eigenfunction estimates observed at t.fit}
-#'   \item{pred.vec}{matrix of L columns with Eigenfunction estimates observed at t.pred}
+#'   \item{harmfd}{Internal use. Prediction of the Eigenfunction at new values of t, 
+#'                 say under vector t.pred, can be obtained with the next three 
+#'                 parameters. The syntax is 
+#'                 fda::eval.fd(t.pred, harmfd)*t(matrix(sqrt(nObs/etan), L, length(t.pred)))}
+#'   \item{nObs}{Internal use. }
+#'   \item{etan}{Internal use. }
 #'
 #' @examples
 #' # This example uses fda's CanadianWeather dataset:
@@ -40,11 +44,10 @@
 #' @seealso \code{\link{pca.fd}}, \code{\link{stdf}}
 #' @keywords Spatial Statistics
 #' @keywords Functional Data Analysis
-tfpca <- function(MatY, L, t.fit, t.pred, lambda = 0, tbas = 20){
+tfpca <- function(MatY, L, t.fit, lambda = 0, tbas = 20){
   nObs <- nrow(MatY)
   if(nObs < tbas) stop("Number of basis > number of observations, please adjust \"tbas\" parameter\n")
-  if(any(t.pred < min(t.fit) | t.pred > max(t.fit))) stop("\"tfpca\" cannot extrapolate values for \"prediction.step\"\n")
-  rng <- range(c(t.fit, t.pred))
+  rng <- range(t.fit)
   timebasis <- fda::create.bspline.basis(rng, nbasis = tbas) # Smoothness controlled with # basis
   timefdPar <- fda::fdPar(timebasis, lambda = lambda) # lambda = 0 => no additional smoothing
   smtempfd <- fda::smooth.basis(t.fit, MatY, timebasis)$fd # Preliminary smoothing
@@ -54,6 +57,9 @@ tfpca <- function(MatY, L, t.fit, t.pred, lambda = 0, tbas = 20){
   etan <- apply(fdmat^2,2,sum)
   values <- pcafd$values[1:L]*etan/nObs # Truncates at L, multiply by |phi|, divide by n
   vectors <- fdmat*t(matrix(sqrt(nObs/etan), L, nObs)) # Vectors at scale of data?
-  fd.pre <- fda::eval.fd(t.pred, harmfd)*t(matrix(sqrt(nObs/etan),L,length(t.pred)))
-  return(list(values=values, vectors=vectors, pred.vec=fd.pre))
+  return(list(values = values,
+              vectors = vectors, 
+              harmfd = harmfd,
+              nObs = nObs,
+              etan = etan))
 }

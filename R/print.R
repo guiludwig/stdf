@@ -11,7 +11,7 @@ print.stdf <- function(x, digits = max(3L, getOption("digits") - 3L), ...) {
     cat("Spatial coefficients:\n")
     temp <- x$spatCov
     names(temp) <- paste0("phi",1:length(temp))
-    cat(format(temp, digits = digits), print.gap = 2L, 
+    print.default(format(temp, digits = digits), print.gap = 2L, 
                   quote = FALSE)
   }
   else cat("No deterministic coefficients\n")
