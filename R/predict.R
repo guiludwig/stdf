@@ -1,6 +1,8 @@
 predict.stdf <- function(model, newdata = NULL, 
                          what = c("fit", "predict", "loadings"), 
-                         loadings.range = list(x = c(0,1), y = c(0,1), mesh = 20)) {
+                         loadings.range = list(x = c(0,1), 
+                                               y = c(0,1), 
+                                               mesh = 20), ...) {
   what <- match.arg(what)
   if(what == "predict" & !is.data.frame(newdata)){
     stop("Please provide a \"newdata\" object with entries matching the training.set columns.")
@@ -72,7 +74,7 @@ predict.stdf <- function(model, newdata = NULL,
     }  
     for(j in 1:L){
       tempPsi <- lamb.est[j]*exp(-DKrig/theta[j])
-      tempLoad <- -1*crossprod(tempPsi, solve(psi.cov, model$resid))
+      tempLoad <- crossprod(tempPsi, solve(psi.cov, model$resid))
       ret[[j]] <- matrix(as.numeric(tempLoad), nrow = loadings.range$mesh)
     }
     ret$loadings.range <- new.s

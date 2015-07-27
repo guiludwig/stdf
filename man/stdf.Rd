@@ -39,10 +39,12 @@ to 0 (no smoothing). See \code{\link{tfpca}} function.}
 assumed to be the same or not. Defaults to FALSE.}
 
 \item{method}{Either "L-BFGS-B" or "Nelder-Mead", which are passed to the
-              optimization function \code{\link{constrOptim}}.}
+optimization function \code{\link{constrOptim}}.}
 
 \item{verbose}{Whether \code{stdf} prints a message when the optimization
 step is done. Defaults to \code{TRUE}.}
+
+\item{...}{further arguments passed to or from other methods.}
 }
 \value{
 \code{stdf} returns an object of \code{\link{class}} "stdf" containing
@@ -90,7 +92,7 @@ roving[,1] <- complete[201:250,1]
 prediction[,1] <- complete[251:300,1]
 
 results <- stdf(static, ssensors = 4, L = 3)
-resultsNM <- stdf(static, sensors = 4, L = 3,
+resultsNM <- stdf(static, ssensors = 4, L = 3,
                   method = "Nelder-Mead")
 # Compare results of using "L-BFGS-B" and "Nelder-Mead";
 # Should be almost the same, bar numberical accuracy issues

@@ -28,6 +28,7 @@
 #'                step is done. Defaults to \code{TRUE}.
 #' @param method Either "L-BFGS-B" or "Nelder-Mead", which are passed to the 
 #'               optimization function \code{\link{constrOptim}}. 
+#' @param ... further arguments passed to or from other methods.
 #'
 #' @export
 #' @return \code{stdf} returns an object of \code{\link{class}} "stdf" containing 
@@ -71,7 +72,7 @@
 #' prediction[,1] <- complete[251:300,1]
 #' 
 #' results <- stdf(static, ssensors = 4, L = 3)
-#' resultsNM <- stdf(static, sensors = 4, L = 3, 
+#' resultsNM <- stdf(static, ssensors = 4, L = 3, 
 #'                   method = "Nelder-Mead")
 #' # Compare results of using "L-BFGS-B" and "Nelder-Mead";
 #' # Should be almost the same, bar numberical accuracy issues
@@ -153,7 +154,8 @@ stdf <- function(training.set, subtfpca = NULL, ssensors = 6,
     t.fit <- unique(training.set[subtfpca,2])
   }
   nSt <- length(t.fit)
-  Step2 <- tfpca(NoiStDe, L, t.fit, lambda = fpca.lambda, tbas = fpca.df, ...) 
+  Step2 <- tfpca(MatY = NoiStDe, L = L, t.fit = t.fit, 
+                 lambda = fpca.lambda, tbas = fpca.df, ...) 
   lamb.est <- Step2$values
   Phi.est <- Step2$vectors
   

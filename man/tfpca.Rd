@@ -42,8 +42,8 @@ The tuning parameter lambda must be passed manually.
 \examples{
 # This example uses fda's CanadianWeather dataset:
 library(fda)
-test <- tfpca(CanadianWeather$dailyAv[,,"Temperature.C"], 2, 1:365, 32:60, 0, 20)
-test2 <- tfpca(CanadianWeather$dailyAv[,,"Temperature.C"], 2, 1:365, 32:60, 1e5, 20)
+test <- tfpca(CanadianWeather$dailyAv[,,"Temperature.C"], 2, 1:365, 0, 20)
+test2 <- tfpca(CanadianWeather$dailyAv[,,"Temperature.C"], 2, 1:365, 1e5, 20)
 layout(matrix(1:4, byrow = TRUE, ncol = 2))
 plot(test$vectors[,1], type="l", main="First Principal Component")
 plot(test$vectors[,2], type="l", main="Second Principal Component")

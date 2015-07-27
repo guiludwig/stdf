@@ -7,21 +7,26 @@
 #' @param L Number of functional principal components.
 #' @param lamb.est Vector of eigenvalues.
 #' @param theta Vector of spatial dependence parameters.
+#' @param PhiTime Vector of times, in numeric mode.
+#' @param PhiTimeTE Either NULL (repeats PhiTime) or vector of times, 
+#'        in numeric mode (for prediction)
 #' @param homogeneous Logical flag for homogeneous model.
 #' @param subsetStatic Logical vector for subset of static sensors
 #' @param kriging Logical flag, whether the function is evaluating a covariance
 #'                matrix (FALSE) or a kriging cross-covariance matrix (TRUE). 
 #'                Defaults to FALSE.
 #'
-#' @export
 #' @return List of one items
 #'   \item{psi.cov}{Desired covariance matrix}
 #'
 #' @examples
-#' evalPsi(DTR = matrix(c(1,0,0,1), 2),
+#' \dontrun{
+#' # Syntax example
+#' stdf::evalPsi(DTR = matrix(c(1,0,0,1), 2),
 #'         L = 1, lamb.est = 1,
 #'         theta = 1:2, PhiTime = matrix(1:2, ncol=1), PhiTimeTE = NULL,
 #'         homogeneous = TRUE, subsetStatic = rep(1, 2))
+#'         }
 #'
 #' @seealso \code{\link{stdf}}
 #' @keywords Spatial Statistics

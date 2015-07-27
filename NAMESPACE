@@ -1,5 +1,6 @@
 useDynLib(stdf)
-export("stdf","tfpca","print.stdf","predict.stdf","print.stdfPred")
+export(stdf,tfpca)
+S3method(print.stdf,predict.stdf,print.stdfPred)
 import(splines)
 import(fda)
 import(RcppEigen)

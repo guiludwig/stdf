@@ -16,6 +16,11 @@ evalPsi(DTR, L, lamb.est, theta, PhiTime, PhiTimeTE = NULL, homogeneous,
 
 \item{theta}{Vector of spatial dependence parameters.}
 
+\item{PhiTime}{Vector of times, in numeric mode.}
+
+\item{PhiTimeTE}{Either NULL (repeats PhiTime) or vector of times,
+in numeric mode (for prediction)}
+
 \item{homogeneous}{Logical flag for homogeneous model.}
 
 \item{subsetStatic}{Logical vector for subset of static sensors}
@@ -33,10 +38,13 @@ This function is for internal use on the STDF algorithm. It evaluates the
 covariance matrix for fitting, and the kriging matrix for prediction.
 }
 \examples{
-evalPsi(DTR = matrix(c(1,0,0,1), 2),
+\dontrun{
+# Syntax example
+stdf::evalPsi(DTR = matrix(c(1,0,0,1), 2),
         L = 1, lamb.est = 1,
         theta = 1:2, PhiTime = matrix(1:2, ncol=1), PhiTimeTE = NULL,
         homogeneous = TRUE, subsetStatic = rep(1, 2))
+        }
 }
 \seealso{
 \code{\link{stdf}}
