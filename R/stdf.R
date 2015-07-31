@@ -251,6 +251,6 @@ stdf <- function(training.set, subtfpca = NULL, ssensors = 6,
   ret$homogeneous <- homogeneous
   ret$resid <- resid
   ret$spline.df <- spline.df
-  class(ret) <- append(class(ret), "stdf")
+  class(ret) <- "stdf"
   return(ret)
 }

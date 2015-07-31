@@ -73,7 +73,10 @@ predict.stdf <- function(model, newdata = NULL,
                           (training.set[i,4] - new.s$y)^2)
     }  
     for(j in 1:L){
-      tempPsi <- lamb.est[j]*exp(-DKrig/theta[j])
+      tempPhiTime <- matrix(rep(PhiTime[,j], ncol(DKrig)), byrow = FALSE, 
+                            ncol = ncol(DKrig), 
+                            nrow = nrow(DKrig))
+      tempPsi <- lamb.est[j]*exp(-DKrig/theta[j])*tempPhiTime
       tempLoad <- crossprod(tempPsi, solve(psi.cov, model$resid))
       ret[[j]] <- matrix(as.numeric(tempLoad), nrow = loadings.range$mesh)
     }

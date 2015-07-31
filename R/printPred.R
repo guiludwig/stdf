@@ -10,8 +10,7 @@ print.stdfPred <- function(x, digits = max(3L, getOption("digits") - 3L), ...) {
         print.default(format(x$MSPEKrig, digits = digits), print.gap = 2L, 
                       quote = FALSE)
   } else if(length(x$loadings)){
-    cat("Loadings:\n")
-    print(x$loadings)
+    cat("Number of loadings:", length(x)-1)
   } else {
     cat("\tI could not calculate MSPE\n")
   }
