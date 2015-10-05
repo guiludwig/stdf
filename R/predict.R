@@ -1,41 +1,42 @@
-predict.stdf <- function(model, newdata = NULL, 
+predict.stdf <- function(object, newdata = NULL, 
                          what = c("fit", "predict", "loadings"), 
                          loadings.range = list(x = c(0,1), 
                                                y = c(0,1), 
                                                mesh = 20), ...) {
   what <- match.arg(what)
-  if(what == "predict" & !is.data.frame(newdata)){
+  if(what == "predict" & !(is.data.frame(newdata)|is.matrix(newdata))){
     stop("Please provide a \"newdata\" object with entries matching the training.set columns.")
+    # Need to write some test to match names
   }
-  if(what == "fit" & is.data.frame(newdata)){
+  if(what == "fit" & is.data.frame(newdata)|is.matrix(newdata)){
     what <- "predict"
   }
   
-  beta.est <- model$beta.est
-  theta <- c(model$spatCov, model$sigma2s)
-  if(!is.null(model$sigma2r)) {
-    theta <- c(theta, model$sigma2r)
+  beta.est <- object$beta.est
+  theta <- c(object$spatCov, object$sigma2s)
+  if(!is.null(object$sigma2r)) {
+    theta <- c(theta, object$sigma2r)
   }
-  tfpca.params <- model$tfpca.params
-  training.set <- model$training.set
+  tfpca.params <- object$tfpca.params
+  training.set <- object$training.set
   nTR <- nrow(training.set)
   DTR <- matrix(0, nrow = nTR, ncol = nTR)  
   for(i in 1:nTR) {
     DTR[i, ] <- sqrt((training.set[i,3] - training.set[,3])^2 + (training.set[i,4] - training.set[,4])^2)
   }
-  if(is.null(model$subtfpca)) {
+  if(is.null(object$subtfpca)) {
     subsetStatic <- rep(1, nTR)
     t.fit <- unique(training.set[ ,2])
   } else {
-    subsetStatic <- as.numeric(model$subtfpca)
-    t.fit <- unique(training.set[model$subtfpca,2])
+    subsetStatic <- as.numeric(object$subtfpca)
+    t.fit <- unique(training.set[object$subtfpca,2])
   }
   lamb.est <- tfpca.params$values
   Phi.est <- tfpca.params$vectors
   PhiTime <- Phi.est[match(training.set[ ,2], t.fit),]
-  L <- length(model$spatCov)
+  L <- length(object$spatCov)
   psi.cov <- evalPsi(DTR, L, lamb.est, theta, PhiTime, PhiTimeTE = NULL,
-                     model$homogeneous, subsetStatic, kriging = FALSE)
+                     object$homogeneous, subsetStatic, kriging = FALSE)
   if(is.null(newdata)){
     prediction.set <- training.set
   } else {
@@ -54,10 +55,10 @@ predict.stdf <- function(model, newdata = NULL,
     Phi.estTE <- with(tfpca.params, fda::eval.fd(t.pred, harmfd)*t(matrix(sqrt(nObs/etan), L, length(t.pred))))
     PhiTimeTE <- Phi.estTE[match(prediction.set[ ,2], t.pred), ]
     psi.krig <- evalPsi(DKrig, L, lamb.est, theta, PhiTime, PhiTimeTE,
-                        model$homogeneous, subsetStatic, kriging = TRUE)
+                        object$homogeneous, subsetStatic, kriging = TRUE)
 
-    XTE <- cbind(1, prediction.set[,3:4], splines::bs(prediction.set[ ,2], df = model$spline.df))
-    YKrig <- as.numeric(XTE%*%beta.est+crossprod(psi.krig, solve(psi.cov, model$resid)))
+    XTE <- cbind(1, prediction.set[,3:4], splines::bs(prediction.set[ ,2], df = object$spline.df))
+    YKrig <- as.numeric(XTE%*%beta.est+crossprod(psi.krig, solve(psi.cov, object$resid)))
     MSPEKrig <- mean((prediction.set[,1]-YKrig)^2)
     
     ret <- list(fitted = YKrig, MSPEKrig = MSPEKrig)
@@ -77,7 +78,7 @@ predict.stdf <- function(model, newdata = NULL,
                             ncol = ncol(DKrig), 
                             nrow = nrow(DKrig))
       tempPsi <- lamb.est[j]*exp(-DKrig/theta[j])*tempPhiTime
-      tempLoad <- crossprod(tempPsi, solve(psi.cov, model$resid))
+      tempLoad <- crossprod(tempPsi, solve(psi.cov, object$resid))
       ret[[j]] <- matrix(as.numeric(tempLoad), nrow = loadings.range$mesh)
     }
     ret$loadings.range <- new.s

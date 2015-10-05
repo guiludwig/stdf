@@ -7,13 +7,13 @@
 #' Notice \code{tfpca} do not handle NA's in the data values. It might be useful do to some
 #' kind of nearest neightbor imputation if possible. The \code{fda} function \code{data2fd} does
 #' a least-squares fit of the basis function, which can be helpful in preprocessing the data.
-#' The tuning parameter lambda must be passed manually.
+#' The tuning parameter zeta must be passed manually.
 #'
 #' @param MatY The data organized in a matrix, with each time series in a column. Missing 
 #' values are currently not handled properly.
 #' @param L The number of functional principal components to be returned.
 #' @param t.fit Values of the time-domain at which a value is fitted.
-#' @param lambda Smoothness parameter, must be provided. Defaults to 0 (no smoothing).
+#' @param zeta Smoothness parameter, must be provided. Defaults to 0 (no smoothing).
 #' @param tbas Number of spline basis functions used in the smooth.
 #'
 #' @export
@@ -44,17 +44,17 @@
 #' @seealso \code{\link{pca.fd}}, \code{\link{stdf}}
 #' @keywords Spatial Statistics
 #' @keywords Functional Data Analysis
-tfpca <- function(MatY, L, t.fit, lambda = 0, tbas = 20){
+tfpca <- function(MatY, L, t.fit, zeta = 0, tbas = 20){
   nObs <- nrow(MatY)
   if(nObs < tbas) stop("Number of basis > number of observations, please adjust \"tbas\" parameter\n")
   rng <- range(t.fit)
   timebasis <- fda::create.bspline.basis(rng, nbasis = tbas) # Smoothness controlled with # basis
-  timefdPar <- fda::fdPar(timebasis, lambda = lambda) # lambda = 0 => no additional smoothing
+  timefdPar <- fda::fdPar(timebasis, lambda = zeta) # zeta = 0 => no additional smoothing
   smtempfd <- fda::smooth.basis(t.fit, MatY, timebasis)$fd # Preliminary smoothing
   pcafd <- fda::pca.fd(smtempfd, nharm = L, timefdPar)
   harmfd <- pcafd[[1]]
   fdmat <- fda::eval.fd(t.fit, harmfd)
-  etan <- apply(fdmat^2,2,sum)
+  etan <- apply(fdmat^2,2,sum) # Approximation of integral?
   values <- pcafd$values[1:L]*etan/nObs # Truncates at L, multiply by |phi|, divide by n
   vectors <- fdmat*t(matrix(sqrt(nObs/etan), L, nObs)) # Vectors at scale of data?
   return(list(values = values,

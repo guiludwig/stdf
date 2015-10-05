@@ -18,7 +18,7 @@
 #' @param spline.df Number of spline basis for the deterministic spline 
 #'                  component (see \code{\link{bs}} function). Defaults to 
 #'                  NULL, which uses 3 spline basis.
-#' @param fpca.lambda Smoothness parameter for the fpca function. Defaults 
+#' @param zeta Smoothness parameter for the fpca function. Defaults 
 #'                    to 0 (no smoothing). See \code{\link{tfpca}} function.
 #' @param fpca.df Number of spline basis for the stochastic spline component 
 #'                (see \code{\link{tfpca}} function). Defaults to 20. 
@@ -111,7 +111,7 @@
 #'             rep(CanadianWeather$coordinates[, "W.longitude"], each = 365))
 #' fakePred <- XY[1:3,]
 #' model <- stdf(XY, ssensors = n, homogeneous = TRUE,
-#'               L = 2, fpca.lambda = 1e5)
+#'               L = 2, zeta = 1e5)
 #' # Creating a hazard map requires the ggplot2 package
 #' # TODO
 #' }
@@ -128,7 +128,7 @@
 #' @keywords Spatial Statistics
 #' @keywords Functional Data Analysis
 stdf <- function(training.set, subtfpca = NULL, ssensors = 6, 
-                 L = 2, spline.df = NULL, fpca.lambda = 0, fpca.df = 20, 
+                 L = 2, spline.df = NULL, zeta = 0, fpca.df = 20, 
                  homogeneous = FALSE, 
                  method = c("L-BFGS-B","Nelder-Mead"),
                  verbose = TRUE, ...){
@@ -155,7 +155,7 @@ stdf <- function(training.set, subtfpca = NULL, ssensors = 6,
   }
   nSt <- length(t.fit)
   Step2 <- tfpca(MatY = NoiStDe, L = L, t.fit = t.fit, 
-                 lambda = fpca.lambda, tbas = fpca.df, ...) 
+                 zeta = zeta, tbas = fpca.df, ...) 
   lamb.est <- Step2$values
   Phi.est <- Step2$vectors
   
@@ -244,8 +244,6 @@ stdf <- function(training.set, subtfpca = NULL, ssensors = 6,
   ret$phi <- Phi.est[order(t.fit),]
   ret$times <- sort(t.fit)
   ret$tfpca.params <- Step2
-  ret$training.set <- training.set
-  ret$training.set <- training.set
   ret$training.set <- training.set
   ret$subtfpca <- subtfpca
   ret$homogeneous <- homogeneous

@@ -4,7 +4,7 @@
 \alias{tfpca}
 \title{Temporal Functional Principal Component}
 \usage{
-tfpca(MatY, L, t.fit, lambda = 0, tbas = 20)
+tfpca(MatY, L, t.fit, zeta = 0, tbas = 20)
 }
 \arguments{
 \item{MatY}{The data organized in a matrix, with each time series in a column. Missing
@@ -14,7 +14,7 @@ values are currently not handled properly.}
 
 \item{t.fit}{Values of the time-domain at which a value is fitted.}
 
-\item{lambda}{Smoothness parameter, must be provided. Defaults to 0 (no smoothing).}
+\item{zeta}{Smoothness parameter, must be provided. Defaults to 0 (no smoothing).}
 
 \item{tbas}{Number of spline basis functions used in the smooth.}
 }
@@ -37,7 +37,7 @@ eigenfunctions/eigenvalues in a way that's needed by the \code{stdf} function.
 Notice \code{tfpca} do not handle NA's in the data values. It might be useful do to some
 kind of nearest neightbor imputation if possible. The \code{fda} function \code{data2fd} does
 a least-squares fit of the basis function, which can be helpful in preprocessing the data.
-The tuning parameter lambda must be passed manually.
+The tuning parameter zeta must be passed manually.
 }
 \examples{
 # This example uses fda's CanadianWeather dataset:
