@@ -1,3 +1,3 @@
-residuals.stdf <- function(model) {
-  
+residuals.stdf <- function(object, ...) {
+  return(as.numeric(object$residuals))
 }

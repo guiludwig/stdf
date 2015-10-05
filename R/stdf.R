@@ -4,7 +4,7 @@
 #' Fusion (STDF) model to spatio-temporal data.
 #'
 #' @param training.set A numeric matrix with the response variable in the 
-#'                     first column, time values in the second column and X, Y 
+#'                     first column, time values in the second column and x, y 
 #'                     spatial coordinates in the third column. Corresponds to 
 #'                     the training data.
 #' @param subtfpca Logical vector with the same length as the number of rows in 
@@ -253,7 +253,7 @@ stdf <- function(training.set, subtfpca = NULL, ssensors = 6,
   ret$training.set <- training.set
   ret$subtfpca <- subtfpca
   ret$homogeneous <- homogeneous
-  ret$resid <- resid
+  ret$residuals <- resid
   ret$spline.df <- spline.df
   class(ret) <- "stdf"
   return(ret)
