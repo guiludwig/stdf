@@ -43,13 +43,15 @@
 #' # sensor simulation example, placeholder for unit tests but also shows
 #' # options available for optimization:
 #' set.seed(1)
-#' static <- cbind(rep(0, 200), rep(1:50,4), 
-#'                 rep(c(2,2,4,4), each = 50), 
-#'                 rep(c(2,4,2,4), each = 50))
-#' roving <- cbind(rep(0, 50), 1:50, 
-#'                 seq(2,4, length=50), 
-#'                 seq(2,4, length=50))
-#' prediction <- cbind(rep(0, 50), 1:50, 3, 3)
+#' static <- cbind(Y = rep(0, 200), 
+#'                 t = rep(1:50,4), 
+#'                 sx = rep(c(2,2,4,4), each = 50), 
+#'                 sy = rep(c(2,4,2,4), each = 50))
+#' roving <- cbind(Y = rep(0, 50), 
+#'                 t = 1:50, 
+#'                 sx = seq(2,4, length=50), 
+#'                 sy = seq(2,4, length=50))
+#' prediction <- cbind(Y = rep(0, 50), t = 1:50, sx = 3, sy = 3)
 #' complete <- rbind(static, roving, prediction)
 #' D <- matrix(0, 300, 300)
 #' for(i in 1:300) D[i,] <- sqrt((complete[i,3] - complete[,3])^2 + 
@@ -78,6 +80,10 @@
 #' # Should be almost the same, bar numberical accuracy issues
 #' results
 #' resultsNM
+#' # How to predict, and some numerical accuracy difference
+#' test.A <- predict(results, prediction)
+#' test.B <- predict(resultsNM, prediction)
+#' all.equal(test.A$fitted, test.B$fitted)
 #' # Compare with fitting homogeneous case
 #' resultsH <- stdf(static, ssensors = 4, L = 3, 
 #'                  homogeneous = TRUE)
