@@ -26,12 +26,10 @@ predict.stdf <- function(object, newdata = NULL,
   }
   if(is.null(object$subtfpca)) {
     subsetStatic <- rep(1, nTR)
-    TOTAL.fit <- t.fit <- unique(training.set[ ,2])
   } else {
     subsetStatic <- as.numeric(object$subtfpca)
-    t.fit <- unique(training.set[object$subtfpca,2])
-    TOTAL.fit <- unique(training.set[ ,2])
   }
+  TOTAL.fit <- unique(training.set[ ,2])
   lamb.est <- tfpca.params$values
   Phi.est <- with(tfpca.params, fda::eval.fd(TOTAL.fit, harmfd)*t(matrix(sqrt(nObs/etan), L, length(TOTAL.fit))))
   PhiTime <- Phi.est[match(training.set[ ,2], TOTAL.fit),]
@@ -58,7 +56,7 @@ predict.stdf <- function(object, newdata = NULL,
     psi.krig <- evalPsi(DKrig, L, lamb.est, theta, PhiTime, PhiTimeTE,
                         object$homogeneous, subsetStatic, kriging = TRUE)
 
-    XTE <- cbind(1, prediction.set[,3:4], splines::bs(prediction.set[ ,2], df = object$spline.df))
+    XTE <- cbind(1, prediction.set[,3:4], splines:::predict.bs(splines::bs(training.set[ ,2], df = object$spline.df), prediction.set[ ,2]))
     YKrig <- as.numeric(XTE%*%beta.est+crossprod(psi.krig, solve(psi.cov, object$resid)))
     MSPEKrig <- mean((prediction.set[,1]-YKrig)^2)
     
