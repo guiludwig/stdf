@@ -154,16 +154,16 @@ stdf <- function(training.set, subtfpca = NULL, ssensors = 6,
   
   if(is.null(subtfpca)){
     NoiStDe <- matrix(training.set.detrended[, 1], ncol = ssensors)
-    t.fit <- unique(training.set[ ,2])
+    TOTAL.fit <- t.fit <- unique(training.set[ ,2])
   } else {
     NoiStDe <- matrix(training.set.detrended[subtfpca, 1], ncol = ssensors)
     t.fit <- unique(training.set[subtfpca,2])
+    TOTAL.fit <- unique(training.set[ ,2])
   }
-  nSt <- length(t.fit)
   Step2 <- tfpca(MatY = NoiStDe, L = L, t.fit = t.fit, 
                  zeta = zeta, tbas = fpca.df, ...) 
   lamb.est <- Step2$values
-  Phi.est <- Step2$vectors
+  Phi.est <- with(Step2, fda::eval.fd(TOTAL.fit, harmfd)*t(matrix(sqrt(nObs/etan), L, length(TOTAL.fit))))
   
   # Step3:   Spatial Parameters
   
@@ -200,13 +200,13 @@ stdf <- function(training.set, subtfpca = NULL, ssensors = 6,
                               ui = UI, ci = CI, # Constraints
                               DTR = DTR, Y = YTR, XTR = XTR, 
                               subsetStatic = subsetStatic,
-                              PhiTime = Phi.est[match(training.set[ ,2], t.fit),], 
+                              PhiTime = Phi.est[match(training.set[ ,2], TOTAL.fit),], 
                               LambEst = lamb.est)
     } else {
       prof.max <- constrOptim(theta0, logProfileCppH, grad = NULL,
                               ui = UI, ci = CI, # Constraints
                               DTR = DTR, Y = YTR, XTR = XTR, 
-                              PhiTime = Phi.est[match(training.set[ ,2], t.fit),], 
+                              PhiTime = Phi.est[match(training.set[ ,2], TOTAL.fit),], 
                               LambEst = lamb.est)
     }
   } else {
@@ -215,13 +215,13 @@ stdf <- function(training.set, subtfpca = NULL, ssensors = 6,
                               ui = UI, ci = CI, # Constraints
                               DTR = DTR, Y = YTR, XTR = XTR, 
                               subsetStatic = subsetStatic,
-                              PhiTime = Phi.est[match(training.set[ ,2], t.fit),], 
+                              PhiTime = Phi.est[match(training.set[ ,2], TOTAL.fit),], 
                               LambEst = lamb.est)
     } else {
       prof.max <- constrOptim(theta0, logProfileCppH, grad = dlogProfileCppH,
                               ui = UI, ci = CI, # Constraints
                               DTR = DTR, Y = YTR, XTR = XTR, 
-                              PhiTime = Phi.est[match(training.set[ ,2], t.fit),], 
+                              PhiTime = Phi.est[match(training.set[ ,2], TOTAL.fit),], 
                               LambEst = lamb.est)
     }
   } 
@@ -233,7 +233,7 @@ stdf <- function(training.set, subtfpca = NULL, ssensors = 6,
   
   if(verbose) cat("Optimization done. \n")
   
-  PhiTime <- Phi.est[match(training.set[ ,2], t.fit),]
+  PhiTime <- Phi.est[match(training.set[ ,2], TOTAL.fit),]
   psi.cov <- evalPsi(DTR, L, lamb.est, theta, PhiTime, PhiTimeTE = NULL,
                      homogeneous, subsetStatic, kriging = FALSE)
   
@@ -247,8 +247,8 @@ stdf <- function(training.set, subtfpca = NULL, ssensors = 6,
   ret$sigma2s <- theta[L+1]
   if(!is.na(theta[L+2]))
     ret$sigma2r <- theta[L+2]
-  ret$phi <- Phi.est[order(t.fit),]
-  ret$times <- sort(t.fit)
+  ret$phi <- Phi.est[order(TOTAL.fit),]
+  ret$times <- sort(TOTAL.fit)
   ret$tfpca.params <- Step2
   ret$training.set <- training.set
   ret$subtfpca <- subtfpca

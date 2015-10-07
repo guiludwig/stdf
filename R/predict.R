@@ -26,14 +26,15 @@ predict.stdf <- function(object, newdata = NULL,
   }
   if(is.null(object$subtfpca)) {
     subsetStatic <- rep(1, nTR)
-    t.fit <- unique(training.set[ ,2])
+    TOTAL.fit <- t.fit <- unique(training.set[ ,2])
   } else {
     subsetStatic <- as.numeric(object$subtfpca)
     t.fit <- unique(training.set[object$subtfpca,2])
+    TOTAL.fit <- unique(training.set[ ,2])
   }
   lamb.est <- tfpca.params$values
-  Phi.est <- tfpca.params$vectors
-  PhiTime <- Phi.est[match(training.set[ ,2], t.fit),]
+  Phi.est <- with(tfpca.params, fda::eval.fd(TOTAL.fit, harmfd)*t(matrix(sqrt(nObs/etan), L, length(TOTAL.fit))))
+  PhiTime <- Phi.est[match(training.set[ ,2], TOTAL.fit),]
   L <- length(object$spatCov)
   psi.cov <- evalPsi(DTR, L, lamb.est, theta, PhiTime, PhiTimeTE = NULL,
                      object$homogeneous, subsetStatic, kriging = FALSE)
