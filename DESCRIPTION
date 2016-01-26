@@ -9,11 +9,12 @@ Imports:
 LinkingTo: Rcpp, RcppEigen
 Type: Package
 Title: Spatio-Temporal Data Fusion Model
-Version: 0.2.9
+Version: 0.3.0
 Author: Guilherme Ludwig [aut, cre],
-  Tingjin Chu [aut]
+    Tingjin Chu [aut]
 Maintainer: Guilherme Ludwig <gvludwig@stat.wisc.edu>
 License: GPL (>= 2)
-Date: 2015-10-06
-Description: Implementation of the Spatio-Temporal Data Fusion Model for 
+Date: 2016-01-25
+Description: Implementation of the Spatio-Temporal Data Fusion Model for
     hazard mapping.
+RoxygenNote: 5.0.1

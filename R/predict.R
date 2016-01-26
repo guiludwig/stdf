@@ -1,8 +1,15 @@
 predict.stdf <- function(object, newdata = NULL, 
                          what = c("fit", "predict", "loadings"), 
+                         se = FALSE, 
                          loadings.range = list(x = c(0,1), 
                                                y = c(0,1), 
                                                mesh = 20), ...) {
+  # NOTES:
+  # * Make sure spline.df is matching when calculating kriging s.e.
+  # * Rethink what's the best way to load data into model; too much 
+  #   copying of the original dataset results in inefficiency.
+  # * Did I use the right formula for se? Was it the most efficient?
+  
   what <- match.arg(what)
   if(what == "predict" & !(is.data.frame(newdata)|is.matrix(newdata))){
     stop("Please provide a \"newdata\" object with entries matching the training.set columns.")
@@ -10,6 +17,9 @@ predict.stdf <- function(object, newdata = NULL,
   }
   if(what == "fit" & is.data.frame(newdata)|is.matrix(newdata)){
     what <- "predict"
+  } 
+  if(what == "loadings" & se){
+    stop("Standard error for loadings not implemented yet!")
   }
   
   beta.est <- object$beta.est
@@ -60,7 +70,17 @@ predict.stdf <- function(object, newdata = NULL,
     YKrig <- as.numeric(XTE%*%beta.est+crossprod(psi.krig, solve(psi.cov, object$resid)))
     MSPEKrig <- mean((prediction.set[,1]-YKrig)^2)
     
-    ret <- list(fitted = YKrig, MSPEKrig = MSPEKrig)
+    ret <- list(fit = YKrig, MSPEKrig = MSPEKrig)
+    if(se){
+      # Need to get XTR!
+      XTR <- cbind(1, object$training.set[ ,3:4], 
+                   splines::bs(object$training.set[ ,2], df = object$spline.df))
+      # Is this right?
+      SE <- crossprod(psi.krig, solve(psi.cov, psi.krig)) + 
+        (XTE - solve(psi.cov, psi.krig)%*%XTR)%*%solve(t(XTR)%*%solve(psi.cov, XTR),  
+         t(XTE - solve(psi.cov, psi.krig)%*%XTR))
+      ret$se.fit <- diag(SE)
+    }
   } else if(what == "loadings"){
     # Evaluate loadings
     new.s <- with(loadings.range, expand.grid(x = seq(x[1], x[2], length.out = mesh), 
