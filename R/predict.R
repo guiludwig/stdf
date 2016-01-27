@@ -42,7 +42,10 @@ predict.stdf <- function(object, newdata = NULL,
   TOTAL.fit <- unique(training.set[ ,2])
   lamb.est <- tfpca.params$values
   L <- length(object$spatCov)
+<<<<<<< HEAD
   if(!L) stop("Spatial parameters are missing!\n")
+=======
+>>>>>>> ab69dc30d37b5cdd98d508a2fcd97fd77131cde3
   Phi.est <- with(tfpca.params, fda::eval.fd(TOTAL.fit, harmfd)*t(matrix(sqrt(nObs/etan), L, length(TOTAL.fit))))
   PhiTime <- Phi.est[match(training.set[ ,2], TOTAL.fit),]
   psi.cov <- evalPsi(DTR, L, lamb.est, theta, PhiTime, PhiTimeTE = NULL,
