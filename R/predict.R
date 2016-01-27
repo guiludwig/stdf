@@ -41,9 +41,9 @@ predict.stdf <- function(object, newdata = NULL,
   }
   TOTAL.fit <- unique(training.set[ ,2])
   lamb.est <- tfpca.params$values
+  L <- length(object$spatCov)
   Phi.est <- with(tfpca.params, fda::eval.fd(TOTAL.fit, harmfd)*t(matrix(sqrt(nObs/etan), L, length(TOTAL.fit))))
   PhiTime <- Phi.est[match(training.set[ ,2], TOTAL.fit),]
-  L <- length(object$spatCov)
   psi.cov <- evalPsi(DTR, L, lamb.est, theta, PhiTime, PhiTimeTE = NULL,
                      object$homogeneous, subsetStatic, kriging = FALSE)
   if(is.null(newdata)){
