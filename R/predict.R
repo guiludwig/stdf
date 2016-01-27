@@ -78,8 +78,8 @@ predict.stdf <- function(object, newdata = NULL,
                    splines::bs(object$training.set[ ,2], df = object$spline.df))
       # Is this right?
       SE <- crossprod(psi.krig, solve(psi.cov, psi.krig)) + 
-        (XTE - solve(psi.cov, psi.krig)%*%XTR)%*%solve(t(XTR)%*%solve(psi.cov, XTR),  
-         t(XTE - solve(psi.cov, psi.krig)%*%XTR))
+        (XTE - crossprod(psi.krig, solve(psi.cov, XTR)))%*%solve(t(XTR)%*%solve(psi.cov, XTR),  
+                                                                 t(XTE - crossprod(psi.krig, solve(psi.cov, XTR))))
       ret$se.fit <- diag(SE)
     }
   } else if(what == "loadings"){
