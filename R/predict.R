@@ -73,13 +73,12 @@ predict.stdf <- function(object, newdata = NULL,
     
     ret <- list(fit = YKrig, MSPEKrig = MSPEKrig)
     if(se){
-      # Need to get XTR!
       XTR <- cbind(1, object$training.set[ ,3:4], 
                    splines::bs(object$training.set[ ,2], df = object$spline.df))
       # Is this right?
+      temp.XTR <- solve(psi.cov, XTR)
       SE <- crossprod(psi.krig, solve(psi.cov, psi.krig)) + 
-        (XTE - crossprod(psi.krig, solve(psi.cov, XTR)))%*%solve(t(XTR)%*%solve(psi.cov, XTR),  
-                                                                 t(XTE - crossprod(psi.krig, solve(psi.cov, XTR))))
+        (XTE - crossprod(psi.krig, temp.XTR))%*%solve(t(XTR)%*%temp.XTR, t(XTE - crossprod(psi.krig, temp.XTR)))
       ret$se.fit <- diag(SE)
     }
   } else if(what == "loadings"){

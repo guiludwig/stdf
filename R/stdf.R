@@ -135,28 +135,31 @@
 #' @keywords Functional Data Analysis
 stdf <- function(training.set, subtfpca = NULL, ssensors = 6, 
                  L = 2, spline.df = NULL, zeta = 0, fpca.df = 20, 
-                 homogeneous = FALSE, 
+                 homogeneous = FALSE, cov.fun = "cov.exp",
                  method = c("L-BFGS-B","Nelder-Mead"),
                  verbose = TRUE, ...){
   
-  if(!is.null(subtfpca) && sum(subtfpca) == length(subtfpca)) message("Only static sensors, consider setting homogeneous = TRUE or subtfpca = NULL")
+  if(!is.null(subtfpca) && sum(subtfpca) == length(subtfpca)){
+    message("Only static sensors, consider setting homogeneous = TRUE or subtfpca = NULL")
+  } 
   method <- match.arg(method)
   
   nTR <- nrow(training.set)
   
-  #!# XTR <- cbind(1, x, y, S(t))
+  # Sets up spline, i.e. XTR <- cbind(1, x, y, S(t))
+  # Potentially include covariates here?
   XTR <- cbind(1, training.set[ ,3:4], splines::bs(training.set[ ,2], df = spline.df))
-  YTR <- training.set[ ,1] #!# YTR <- training.set$Leq
+  #!# Assuming response is in first column of training set
+  YTR <- training.set[ ,1] 
   
   Step1 <- .lm.fit(XTR, YTR) # Fastest least squares
-  training.set.detrended <- training.set
-  training.set.detrended[,1] <- Step1$residuals
+  res0 <- Step1$residuals
   
   if(is.null(subtfpca)){
-    NoiStDe <- matrix(training.set.detrended[, 1], ncol = ssensors)
+    NoiStDe <- matrix(res0, ncol = ssensors)
     TOTAL.fit <- t.fit <- unique(training.set[ ,2])
   } else {
-    NoiStDe <- matrix(training.set.detrended[subtfpca, 1], ncol = ssensors)
+    NoiStDe <- matrix(res0[subtfpca], ncol = ssensors)
     t.fit <- unique(training.set[subtfpca,2])
     TOTAL.fit <- unique(training.set[ ,2])
   }
@@ -173,7 +176,7 @@ stdf <- function(training.set, subtfpca = NULL, ssensors = 6,
   }
   
   Dmax <- max(DTR)
-  Vmax <- var(training.set.detrended[,1])
+  Vmax <- var(res0)
   if(homogeneous){
     theta0 <- c(rep(Dmax/2, L), Vmax/2) # theta_{1:L}, sigma
     UI <- rbind(diag(L+1), -1*diag(L+1))
