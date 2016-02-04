@@ -1,0 +1,1 @@
+Eigen::MatrixXd covExp(const Eigen::MatrixXd DTR, double theta);

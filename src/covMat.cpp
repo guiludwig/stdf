@@ -6,6 +6,7 @@
 #include <Rmath.h>
 #include <valarray>
 #include <iostream>
+#include <covMat.h>
 
 using namespace Eigen;
 using namespace Rcpp;
@@ -13,8 +14,7 @@ using namespace Rcpp;
 //' @export
 // [[Rcpp::depends(RcppEigen)]]
 // [[Rcpp::export]]
-MatrixXd covMat(const MatrixXd DTR, double theta, 
-                       double nu){
+MatrixXd covMat(const MatrixXd DTR, double theta, double nu){
   int N = DTR.rows();
   double con = (pow(2.0, nu-1))/tgamma(nu);
   MatrixXd sDTR = sqrt(2*nu)*DTR/theta;

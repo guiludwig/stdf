@@ -4,6 +4,7 @@
 #include <cmath>
 #include <valarray>
 #include <iostream>
+#include <covExp.h>
 
 using namespace Eigen;
 using namespace Rcpp;

@@ -1,0 +1,1 @@
+Eigen::MatrixXd covGauss(const Eigen::MatrixXd DTR, double theta);

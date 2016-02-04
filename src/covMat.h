@@ -1,0 +1,1 @@
+Eigen::MatrixXd covMat(const Eigen::MatrixXd DTR, double theta, double nu);
