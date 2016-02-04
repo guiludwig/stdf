@@ -32,11 +32,13 @@ double logProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR,
                      http://eigen.tuxfamily.org/dox/AsciiQuickReference.txt
    
      */
+  
   int N = Y.size();
   int J = LambEst.size();
-  Eigen::MatrixXd psi(Eigen::MatrixXd(N,N).setZero()); // Dynamic size means: not known at compilation time.
+  MatrixXd psi(MatrixXd(N,N).setZero()); // Dynamic size means: not known at compilation time.
   for(int j = 0; j < J; j++){ 
-    psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
+    // psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
+    psi += LambEst(j)*covExp(DTR, theta(j)).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
   }
   // This is weird but: sigma_R I + (sigma_S - sigma_R) 1{static}
   VectorXd RandNoise = theta(J+1)*Eigen::VectorXd::Constant(N,1) + (theta(J) - theta(J+1))*subsetStatic;
