@@ -6,6 +6,43 @@
 
 using namespace Rcpp;
 
+// covExp
+Eigen::MatrixXd covExp(const Eigen::MatrixXd DTR, double theta);
+RcppExport SEXP stdf_covExp(SEXP DTRSEXP, SEXP thetaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd >::type DTR(DTRSEXP);
+    Rcpp::traits::input_parameter< double >::type theta(thetaSEXP);
+    __result = Rcpp::wrap(covExp(DTR, theta));
+    return __result;
+END_RCPP
+}
+// covGauss
+Eigen::MatrixXd covGauss(const Eigen::MatrixXd DTR, double theta);
+RcppExport SEXP stdf_covGauss(SEXP DTRSEXP, SEXP thetaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd >::type DTR(DTRSEXP);
+    Rcpp::traits::input_parameter< double >::type theta(thetaSEXP);
+    __result = Rcpp::wrap(covGauss(DTR, theta));
+    return __result;
+END_RCPP
+}
+// covMat
+Eigen::MatrixXd covMat(const Eigen::MatrixXd DTR, double theta, double nu);
+RcppExport SEXP stdf_covMat(SEXP DTRSEXP, SEXP thetaSEXP, SEXP nuSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd >::type DTR(DTRSEXP);
+    Rcpp::traits::input_parameter< double >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< double >::type nu(nuSEXP);
+    __result = Rcpp::wrap(covMat(DTR, theta, nu));
+    return __result;
+END_RCPP
+}
 // dlogProfileCpp
 Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR, const Eigen::VectorXd Y, const Eigen::MatrixXd XTR, const Eigen::VectorXd subsetStatic, const Eigen::MatrixXd PhiTime, const Eigen::VectorXd LambEst);
 RcppExport SEXP stdf_dlogProfileCpp(SEXP thetaSEXP, SEXP DTRSEXP, SEXP YSEXP, SEXP XTRSEXP, SEXP subsetStaticSEXP, SEXP PhiTimeSEXP, SEXP LambEstSEXP) {

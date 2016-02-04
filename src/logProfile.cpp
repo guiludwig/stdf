@@ -4,13 +4,13 @@
 #include <cmath>        // std::exp(double)
 #include <valarray>     // std::valarray, std::exp(valarray)
 #include <iostream>
+#include <Rmath.h>
+#include "covGauss.h"
+#include "covMat.h"
+#include "covExp.h"
 
 using namespace Eigen;
 using namespace Rcpp;
-
-using Eigen::MatrixXd;
-using Eigen::VectorXd;
-using Eigen::ArrayXd;
 
 //' @export
 // [[Rcpp::depends(RcppEigen)]]
@@ -37,8 +37,8 @@ double logProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR,
   int J = LambEst.size();
   MatrixXd psi(MatrixXd(N,N).setZero()); // Dynamic size means: not known at compilation time.
   for(int j = 0; j < J; j++){ 
-    psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
-    // psi += LambEst(j)*covExp(DTR, theta(j)).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
+    // psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
+    psi += LambEst(j)*covExp(DTR, theta(j)).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
   }
   // This is weird but: sigma_R I + (sigma_S - sigma_R) 1{static}
   VectorXd RandNoise = theta(J+1)*Eigen::VectorXd::Constant(N,1) + (theta(J) - theta(J+1))*subsetStatic;
@@ -58,7 +58,4 @@ double logProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR,
 # Test:
 system.time({logProfileCpp(testTheta <- 1:3, testDTR <- matrix(1,420,420), testY <- 1:420, testXTR <- matrix(1,420,6), testSubsetStatic <- rep(c(0,1), each = 210), testPhiTime <- matrix(rep(1:420,2), ncol=2), testLambEst <- 1:2)})
 replicate(10, system.time({logProfileCpp(testTheta <- 1:3, testDTR <- matrix(1,420,420), testY <- 1:420, testXTR <- matrix(1,420,6), testSubsetStatic <- rep(c(0,1), each = 210), testPhiTime <- matrix(rep(1:420,2), ncol=2), testLambEst <- 1:2)})[3])
-system.time({logProfileCpp(theta0, DTR, NoiTR[,1], XTR, Phi.est[NoiTR[,2],], lamb.est)})
-# Compare with
-system.time({logProfile(theta0, DTR, NoiTR, XTR, Phi.est, lamb.est)})
 */

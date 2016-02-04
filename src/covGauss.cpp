@@ -4,7 +4,7 @@
 #include <cmath>
 #include <valarray>
 #include <iostream>
-#include <covGauss.h>
+#include "covGauss.h"
 
 using namespace Eigen;
 using namespace Rcpp;
@@ -12,7 +12,7 @@ using namespace Rcpp;
 //' @export
 // [[Rcpp::depends(RcppEigen)]]
 // [[Rcpp::export]]
-MatrixXd covGauss(const MatrixXd DTR, double theta){
+Eigen::MatrixXd covGauss(const Eigen::MatrixXd DTR, double theta){
   return((-1*DTR.array().pow(2)/theta).exp().matrix());
 }
 

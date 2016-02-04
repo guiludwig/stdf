@@ -4,7 +4,7 @@
 #include <cmath>
 #include <valarray>
 #include <iostream>
-#include <covExp.h>
+#include "covExp.h"
 
 using namespace Eigen;
 using namespace Rcpp;
@@ -12,7 +12,7 @@ using namespace Rcpp;
 //' @export
 // [[Rcpp::depends(RcppEigen)]]
 // [[Rcpp::export]]
-MatrixXd covExp(const MatrixXd DTR, double theta){
+Eigen::MatrixXd covExp(const Eigen::MatrixXd DTR, double theta){
   return((-1*DTR/theta).array().exp().matrix());
 }
 
