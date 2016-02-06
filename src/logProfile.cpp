@@ -18,7 +18,7 @@ using namespace Rcpp;
 double logProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR, 
                      const Eigen::VectorXd Y, const Eigen::MatrixXd XTR, 
                      const Eigen::VectorXd subsetStatic, const Eigen::MatrixXd PhiTime, 
-                     const Eigen::VectorXd LambEst) {
+                     const Eigen::VectorXd LambEst, const double nu) {
   /* 
    theta: (J + 2) x 1; first J elements have temporal components,
           J+1 has static variance, J+2 has roving variance.
@@ -27,6 +27,8 @@ double logProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR,
    XTR: N x (3 + spline.df) (b0, bx, by, spline-basis)
    PhiTime: N x J
    LambEst: J x 1
+   nu: Matern covariance space smoothness parameter. If equal to 
+       0.5 uses exponential covariance
   
    More about eigen: http://home.uchicago.edu/~skrainka/pdfs/Talk.Eigen.pdf
                      http://eigen.tuxfamily.org/dox/AsciiQuickReference.txt
@@ -36,9 +38,19 @@ double logProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR,
   int N = Y.size();
   int J = LambEst.size();
   MatrixXd psi(MatrixXd(N,N).setZero()); // Dynamic size means: not known at compilation time.
-  for(int j = 0; j < J; j++){ 
-    // psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
-    psi += LambEst(j)*covExp(DTR, theta(j)).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
+  if(nu == 0.5){
+    for(int j = 0; j < J; j++){ 
+      // psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
+      psi += LambEst(j)*covExp(DTR, theta(j)).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
+    }
+  } else if(nu > 10){
+    for(int j = 0; j < J; j++){ 
+      psi += LambEst(j)*covGauss(DTR, theta(j)).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
+    }
+  } else {
+    for(int j = 0; j < J; j++){ 
+      psi += LambEst(j)*covMat(DTR, theta(j), nu).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
+    }
   }
   // This is weird but: sigma_R I + (sigma_S - sigma_R) 1{static}
   VectorXd RandNoise = theta(J+1)*Eigen::VectorXd::Constant(N,1) + (theta(J) - theta(J+1))*subsetStatic;

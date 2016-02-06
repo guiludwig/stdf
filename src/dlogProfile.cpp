@@ -4,13 +4,13 @@
 #include <cmath>        // std::exp(double)
 #include <valarray>     // std::valarray, std::exp(valarray)
 #include <iostream>
+#include <Rmath.h>
+#include "covGauss.h"
+#include "covMat.h"
+#include "covExp.h"
 
 using namespace Eigen;
 using namespace Rcpp;
-
-using Eigen::MatrixXd;
-using Eigen::VectorXd;
-using Eigen::ArrayXd;
 
 //' @export
 // [[Rcpp::depends(RcppEigen)]]
@@ -18,7 +18,7 @@ using Eigen::ArrayXd;
 Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR, 
 const Eigen::VectorXd Y, const Eigen::MatrixXd XTR, 
 const Eigen::VectorXd subsetStatic, const Eigen::MatrixXd PhiTime, 
-const Eigen::VectorXd LambEst) {
+const Eigen::VectorXd LambEst, const double nu) {
   /* 
   theta: J x 1
   DTR: N x N
@@ -26,11 +26,6 @@ const Eigen::VectorXd LambEst) {
   XTR: N x 6 (b0, bx, by, spline-basis)
   PhiTime: N x J
   LambEst: (J-1) x 1
-  
-  removed arg: const Eigen::MatrixXd&NoiTR,
-  pass NoiTR[,1] to it
-  removed arg: const Eigen::VectorXd& PhiEst, 
-  pass Phi.est[NoiTR[,2]] to it
     
   More about eigen: http://home.uchicago.edu/~skrainka/pdfs/Talk.Eigen.pdf
   http://eigen.tuxfamily.org/dox/AsciiQuickReference.txt
@@ -39,44 +34,66 @@ const Eigen::VectorXd LambEst) {
   
   int N = Y.size();
   int J = LambEst.size();
-  Eigen::MatrixXd psi(Eigen::MatrixXd(N,N).setZero()); // Dynamic size means: not known at compilation time.
-  for(int j = 0; j < J; j++){ 
-    psi += LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix()).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
+  MatrixXd psi(MatrixXd(N,N).setZero()); // Dynamic size means: not known at compilation time.
+  if(nu == 0.5){
+    for(int j = 0; j < J; j++){ 
+      psi += LambEst(j)*covExp(DTR, theta(j)).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
+    }
+  } else if(nu > 10){
+    for(int j = 0; j < J; j++){ 
+      psi += LambEst(j)*covGauss(DTR, theta(j)).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
+    }
+  } else {
+    for(int j = 0; j < J; j++){ 
+      psi += LambEst(j)*covMat(DTR, theta(j), nu).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
+    }
   }
-  VectorXd RandNoise = theta(J+1)*Eigen::VectorXd::Constant(N,1) + (theta(J) - theta(J+1))*subsetStatic;
+  VectorXd RandNoise = theta(J+1)*VectorXd::Constant(N,1) + (theta(J) - theta(J+1))*subsetStatic;
   psi += RandNoise.asDiagonal(); // theta has J+2 elements
-  Eigen::MatrixXd psiInv = psi.llt().solve(Eigen::MatrixXd::Identity(N,N));
+  MatrixXd psiInv = psi.llt().solve(MatrixXd::Identity(N,N));
   // Eigen::MatrixXd U = psi.llt().matrixL().adjoint(); // same as chol(psi) in R
   // This step finds beta by Generalized Least Squares
   // Eigen::MatrixXd SX = psi.llt().solve(XTR); // A\b by Cholesky's decomposition
   // Eigen::VectorXd beta = ((XTR.adjoint())*SX).ldlt().solve((SX.adjoint())*Y);
-  Eigen::VectorXd beta = ((XTR.adjoint())*psiInv*XTR).ldlt().solve((XTR.adjoint())*psiInv*Y);
+  VectorXd beta = ((XTR.adjoint())*psiInv*XTR).ldlt().solve((XTR.adjoint())*psiInv*Y);
   // End GLS
-  Eigen::VectorXd resid = Y - XTR*beta;
+  VectorXd resid = Y - XTR*beta;
   
   // Difference to logProfile() starts here 
   
   // Eigen::VectorXd sigmaRes = psi.ldlt().solve(resid);
-  Eigen::VectorXd sigmaRes = psiInv * resid;
-  Eigen::MatrixXd psij(Eigen::MatrixXd(N,N).setZero());
-  Eigen::VectorXd dTheta = Eigen::VectorXd::Constant(J+2,0);
+  VectorXd sigmaRes = psiInv * resid;
+  MatrixXd psij(MatrixXd(N,N).setZero());
+  VectorXd dTheta = VectorXd::Constant(J+2,0);
   // psij.setZero(N,N);
   // dTheta.resize(J+2);
   
-  for(int j = 0; j < J; j++){
-    psij = DTR.cwiseProduct((LambEst(j)*((-1*DTR/theta(j)).array().exp().matrix())).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).transpose()))/(theta(j)*theta(j)); // if using c = 1/theta, then -1
-    // dTheta(j) = -1*(sigmaRes.adjoint())*psij*sigmaRes + (psi.ldlt().solve(psij)).diagonal().array().sum();
-    dTheta(j) = -1*(sigmaRes.adjoint())*psij*sigmaRes + (psiInv*psij).trace();
+  if(nu == 0.5){
+    for(int j = 0; j < J; j++){
+      psij = DTR.cwiseProduct((LambEst(j)*covExp(DTR, theta(j))).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).transpose()))/(theta(j)*theta(j)); // if using c = 1/theta, then -1
+      dTheta(j) = -1*(sigmaRes.adjoint())*psij*sigmaRes + (psiInv*psij).trace();
+    }
+  } else if(nu > 10){
+    for(int j = 0; j < J; j++){
+      // FIGURE DERIVATIVES
+      psij = DTR.cwiseProduct((LambEst(j)*covExp(DTR, theta(j))).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).transpose()))/(theta(j)*theta(j)); // if using c = 1/theta, then -1
+      dTheta(j) = -1*(sigmaRes.adjoint())*psij*sigmaRes + (psiInv*psij).trace();
+    }
+  } else {
+    for(int j = 0; j < J; j++){ 
+      psij = DTR.cwiseProduct((LambEst(j)*covExp(DTR, theta(j))).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).transpose()))/(theta(j)*theta(j)); // if using c = 1/theta, then -1
+      dTheta(j) = -1*(sigmaRes.adjoint())*psij*sigmaRes + (psiInv*psij).trace();
+    }
   }
   // need eig equivalent of which
   int staticObs = (int) subsetStatic.sum();
   
-  Eigen::VectorXd diagInverse = psiInv.diagonal();
+  VectorXd diagInverse = psiInv.diagonal();
   double diagS = 0.0;
   double diagR = 0.0;
   
-  Eigen::VectorXd sigmaResStatic = Eigen::VectorXd::Constant(staticObs,1);
-  Eigen::VectorXd sigmaResRoving = Eigen::VectorXd::Constant(N - staticObs,1);
+  VectorXd sigmaResStatic = VectorXd::Constant(staticObs,1);
+  VectorXd sigmaResRoving = VectorXd::Constant(N - staticObs,1);
   int wS = 0;
   int wR = 0;
   for(int w = 0; w < N; w++){
