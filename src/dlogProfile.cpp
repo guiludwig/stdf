@@ -75,13 +75,14 @@ const Eigen::VectorXd LambEst, const double nu) {
     }
   } else if(nu > 10){
     for(int j = 0; j < J; j++){
-      // FIGURE DERIVATIVES
-      psij = DTR.cwiseProduct((LambEst(j)*covExp(DTR, theta(j))).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).transpose()))/(theta(j)*theta(j)); // if using c = 1/theta, then -1
+      psij = (DTR).cwiseProduct((LambEst(j)*covGauss(DTR, theta(j))).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).transpose()))/(pow(theta(j),4)); // if using c = 1/theta, then -1
       dTheta(j) = -1*(sigmaRes.adjoint())*psij*sigmaRes + (psiInv*psij).trace();
     }
   } else {
-    for(int j = 0; j < J; j++){ 
-      psij = DTR.cwiseProduct((LambEst(j)*covExp(DTR, theta(j))).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).transpose()))/(theta(j)*theta(j)); // if using c = 1/theta, then -1
+    for(int j = 0; j < J; j++){
+      // http://functions.wolfram.com/Bessel-TypeFunctions/BesselK/20/ShowAll.html
+      MatrixXd sDTR = (sqrt(2*nu)*DTR/theta(j)).array().pow(nu).matrix();
+      psij = (pow(2, nu-1)/tgamma(nu))*sDTR.cwiseProduct(DTR.cwiseProduct((LambEst(j)*covMat(DTR, theta(j), nu - 1)).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).transpose()))/(theta(j)*theta(j))); 
       dTheta(j) = -1*(sigmaRes.adjoint())*psij*sigmaRes + (psiInv*psij).trace();
     }
   }

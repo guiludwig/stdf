@@ -45,7 +45,7 @@ double logProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR,
     }
   } else if(nu > 10){
     for(int j = 0; j < J; j++){ 
-      psi += LambEst(j)*covGauss(DTR, theta(j)).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
+      psi += LambEst(j)*covGauss(0.5*DTR.array().pow(2), theta(j)).cwiseProduct(PhiTime.col(j)*PhiTime.col(j).adjoint()); // PhiPhit.selfadjointView<Lower>().rankUpdate(PhiTime.col(j))
     }
   } else {
     for(int j = 0; j < J; j++){ 
