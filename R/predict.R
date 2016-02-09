@@ -1,3 +1,6 @@
+#' Predict method STDF Model Fits
+#' 
+#' Predicted values for a \code{stdf} object.
 predict.stdf <- function(object, newdata = NULL, 
                          what = c("fit", "predict", "loadings"), 
                          se = FALSE, 
@@ -102,8 +105,8 @@ predict.stdf <- function(object, newdata = NULL,
     }
     ret$loadings.range <- new.s
   }
-  
-  class(ret) <- "stdfPred"
+
+  ret$what <- what
   return(ret)
 }
 

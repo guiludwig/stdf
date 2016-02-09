@@ -1,4 +1,4 @@
-#' STDF model
+#' Fitting Spatio-Temporal Data Fusion Models
 #' 
 #' This function is an wrapper to fitting a Spatio-Temporal Data 
 #' Fusion (STDF) model to spatio-temporal data.

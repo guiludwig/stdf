@@ -8,7 +8,8 @@
 \usage{
 stdf(training.set, subtfpca = NULL, ssensors = 6, L = 2,
   spline.df = NULL, zeta = 0, fpca.df = 20, homogeneous = FALSE,
-  method = c("L-BFGS-B", "Nelder-Mead"), verbose = TRUE, ...)
+  matern.nu = 0.5, method = c("L-BFGS-B", "Nelder-Mead"), verbose = TRUE,
+  ...)
 }
 \arguments{
 \item{training.set}{A numeric matrix with the response variable in the 

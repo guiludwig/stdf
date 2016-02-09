@@ -1,5 +1,5 @@
-print.stdf <- function(x, digits = max(3L, getOption("digits") - 3L), ...) {
-  cat("\nSpatio-Temporal Data Fusion object\n\n", sep = "")
+print.stdf <- function(x, digits = max(3L, getOption("digits") - 3L), summary = FALSE, ...) {
+  if(!summary) {cat("\nSpatio-Temporal Data Fusion object\n\n", sep = "")}
   if (length(x$beta.est)) {
     cat("Deterministic coefficients:\n")
     print.default(format(x$beta.est, digits = digits), print.gap = 2L, 
@@ -11,6 +11,10 @@ print.stdf <- function(x, digits = max(3L, getOption("digits") - 3L), ...) {
     cat("Spatial coefficients:\n")
     temp <- x$spatCov
     names(temp) <- paste0("phi",1:length(temp))
+    print.default(format(temp, digits = digits), print.gap = 2L, 
+                  quote = FALSE)
+    temp <- x$tfpca.params$values
+    names(temp) <- paste0("lambda",1:length(temp))
     print.default(format(temp, digits = digits), print.gap = 2L, 
                   quote = FALSE)
   }
