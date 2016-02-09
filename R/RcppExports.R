@@ -13,19 +13,19 @@ covMat <- function(DTR, theta, nu) {
     .Call('stdf_covMat', PACKAGE = 'stdf', DTR, theta, nu)
 }
 
-dlogProfileCpp <- function(theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst) {
-    .Call('stdf_dlogProfileCpp', PACKAGE = 'stdf', theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst)
+dlogProfileCpp <- function(theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst, nu) {
+    .Call('stdf_dlogProfileCpp', PACKAGE = 'stdf', theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst, nu)
 }
 
-dlogProfileCppH <- function(theta, DTR, Y, XTR, PhiTime, LambEst) {
-    .Call('stdf_dlogProfileCppH', PACKAGE = 'stdf', theta, DTR, Y, XTR, PhiTime, LambEst)
+dlogProfileCppH <- function(theta, DTR, Y, XTR, PhiTime, LambEst, nu) {
+    .Call('stdf_dlogProfileCppH', PACKAGE = 'stdf', theta, DTR, Y, XTR, PhiTime, LambEst, nu)
 }
 
-logProfileCpp <- function(theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst) {
-    .Call('stdf_logProfileCpp', PACKAGE = 'stdf', theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst)
+logProfileCpp <- function(theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst, nu) {
+    .Call('stdf_logProfileCpp', PACKAGE = 'stdf', theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst, nu)
 }
 
-logProfileCppH <- function(theta, DTR, Y, XTR, PhiTime, LambEst) {
-    .Call('stdf_logProfileCppH', PACKAGE = 'stdf', theta, DTR, Y, XTR, PhiTime, LambEst)
+logProfileCppH <- function(theta, DTR, Y, XTR, PhiTime, LambEst, nu) {
+    .Call('stdf_logProfileCppH', PACKAGE = 'stdf', theta, DTR, Y, XTR, PhiTime, LambEst, nu)
 }
 

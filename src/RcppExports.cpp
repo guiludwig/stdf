@@ -44,8 +44,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // dlogProfileCpp
-Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR, const Eigen::VectorXd Y, const Eigen::MatrixXd XTR, const Eigen::VectorXd subsetStatic, const Eigen::MatrixXd PhiTime, const Eigen::VectorXd LambEst);
-RcppExport SEXP stdf_dlogProfileCpp(SEXP thetaSEXP, SEXP DTRSEXP, SEXP YSEXP, SEXP XTRSEXP, SEXP subsetStaticSEXP, SEXP PhiTimeSEXP, SEXP LambEstSEXP) {
+Eigen::VectorXd dlogProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR, const Eigen::VectorXd Y, const Eigen::MatrixXd XTR, const Eigen::VectorXd subsetStatic, const Eigen::MatrixXd PhiTime, const Eigen::VectorXd LambEst, const double nu);
+RcppExport SEXP stdf_dlogProfileCpp(SEXP thetaSEXP, SEXP DTRSEXP, SEXP YSEXP, SEXP XTRSEXP, SEXP subsetStaticSEXP, SEXP PhiTimeSEXP, SEXP LambEstSEXP, SEXP nuSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -56,13 +56,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const Eigen::VectorXd >::type subsetStatic(subsetStaticSEXP);
     Rcpp::traits::input_parameter< const Eigen::MatrixXd >::type PhiTime(PhiTimeSEXP);
     Rcpp::traits::input_parameter< const Eigen::VectorXd >::type LambEst(LambEstSEXP);
-    __result = Rcpp::wrap(dlogProfileCpp(theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst));
+    Rcpp::traits::input_parameter< const double >::type nu(nuSEXP);
+    __result = Rcpp::wrap(dlogProfileCpp(theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst, nu));
     return __result;
 END_RCPP
 }
 // dlogProfileCppH
-Eigen::VectorXd dlogProfileCppH(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR, const Eigen::VectorXd Y, const Eigen::MatrixXd XTR, const Eigen::MatrixXd PhiTime, const Eigen::VectorXd LambEst);
-RcppExport SEXP stdf_dlogProfileCppH(SEXP thetaSEXP, SEXP DTRSEXP, SEXP YSEXP, SEXP XTRSEXP, SEXP PhiTimeSEXP, SEXP LambEstSEXP) {
+Eigen::VectorXd dlogProfileCppH(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR, const Eigen::VectorXd Y, const Eigen::MatrixXd XTR, const Eigen::MatrixXd PhiTime, const Eigen::VectorXd LambEst, const double nu);
+RcppExport SEXP stdf_dlogProfileCppH(SEXP thetaSEXP, SEXP DTRSEXP, SEXP YSEXP, SEXP XTRSEXP, SEXP PhiTimeSEXP, SEXP LambEstSEXP, SEXP nuSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -72,13 +73,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const Eigen::MatrixXd >::type XTR(XTRSEXP);
     Rcpp::traits::input_parameter< const Eigen::MatrixXd >::type PhiTime(PhiTimeSEXP);
     Rcpp::traits::input_parameter< const Eigen::VectorXd >::type LambEst(LambEstSEXP);
-    __result = Rcpp::wrap(dlogProfileCppH(theta, DTR, Y, XTR, PhiTime, LambEst));
+    Rcpp::traits::input_parameter< const double >::type nu(nuSEXP);
+    __result = Rcpp::wrap(dlogProfileCppH(theta, DTR, Y, XTR, PhiTime, LambEst, nu));
     return __result;
 END_RCPP
 }
 // logProfileCpp
-double logProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR, const Eigen::VectorXd Y, const Eigen::MatrixXd XTR, const Eigen::VectorXd subsetStatic, const Eigen::MatrixXd PhiTime, const Eigen::VectorXd LambEst);
-RcppExport SEXP stdf_logProfileCpp(SEXP thetaSEXP, SEXP DTRSEXP, SEXP YSEXP, SEXP XTRSEXP, SEXP subsetStaticSEXP, SEXP PhiTimeSEXP, SEXP LambEstSEXP) {
+double logProfileCpp(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR, const Eigen::VectorXd Y, const Eigen::MatrixXd XTR, const Eigen::VectorXd subsetStatic, const Eigen::MatrixXd PhiTime, const Eigen::VectorXd LambEst, const double nu);
+RcppExport SEXP stdf_logProfileCpp(SEXP thetaSEXP, SEXP DTRSEXP, SEXP YSEXP, SEXP XTRSEXP, SEXP subsetStaticSEXP, SEXP PhiTimeSEXP, SEXP LambEstSEXP, SEXP nuSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -89,13 +91,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const Eigen::VectorXd >::type subsetStatic(subsetStaticSEXP);
     Rcpp::traits::input_parameter< const Eigen::MatrixXd >::type PhiTime(PhiTimeSEXP);
     Rcpp::traits::input_parameter< const Eigen::VectorXd >::type LambEst(LambEstSEXP);
-    __result = Rcpp::wrap(logProfileCpp(theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst));
+    Rcpp::traits::input_parameter< const double >::type nu(nuSEXP);
+    __result = Rcpp::wrap(logProfileCpp(theta, DTR, Y, XTR, subsetStatic, PhiTime, LambEst, nu));
     return __result;
 END_RCPP
 }
 // logProfileCppH
-double logProfileCppH(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR, const Eigen::VectorXd Y, const Eigen::MatrixXd XTR, const Eigen::MatrixXd PhiTime, const Eigen::VectorXd LambEst);
-RcppExport SEXP stdf_logProfileCppH(SEXP thetaSEXP, SEXP DTRSEXP, SEXP YSEXP, SEXP XTRSEXP, SEXP PhiTimeSEXP, SEXP LambEstSEXP) {
+double logProfileCppH(const Eigen::VectorXd theta, const Eigen::MatrixXd DTR, const Eigen::VectorXd Y, const Eigen::MatrixXd XTR, const Eigen::MatrixXd PhiTime, const Eigen::VectorXd LambEst, const double nu);
+RcppExport SEXP stdf_logProfileCppH(SEXP thetaSEXP, SEXP DTRSEXP, SEXP YSEXP, SEXP XTRSEXP, SEXP PhiTimeSEXP, SEXP LambEstSEXP, SEXP nuSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -105,7 +108,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const Eigen::MatrixXd >::type XTR(XTRSEXP);
     Rcpp::traits::input_parameter< const Eigen::MatrixXd >::type PhiTime(PhiTimeSEXP);
     Rcpp::traits::input_parameter< const Eigen::VectorXd >::type LambEst(LambEstSEXP);
-    __result = Rcpp::wrap(logProfileCppH(theta, DTR, Y, XTR, PhiTime, LambEst));
+    Rcpp::traits::input_parameter< const double >::type nu(nuSEXP);
+    __result = Rcpp::wrap(logProfileCppH(theta, DTR, Y, XTR, PhiTime, LambEst, nu));
     return __result;
 END_RCPP
 }

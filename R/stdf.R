@@ -135,14 +135,18 @@
 #' @keywords Functional Data Analysis
 stdf <- function(training.set, subtfpca = NULL, ssensors = 6, 
                  L = 2, spline.df = NULL, zeta = 0, fpca.df = 20, 
-                 homogeneous = FALSE, cov.fun = "cov.exp",
+                 homogeneous = FALSE, matern.nu = 0.5,
                  method = c("L-BFGS-B","Nelder-Mead"),
                  verbose = TRUE, ...){
   
   if(!is.null(subtfpca) && sum(subtfpca) == length(subtfpca)){
     message("Only static sensors, consider setting homogeneous = TRUE or subtfpca = NULL")
   } 
+  if(matern.nu <= 0){
+    message("Select an appropriate smoothness parameter for the Matern covariance function (nu > 0)")
+  } 
   method <- match.arg(method)
+  nu <- matern.nu
   
   nTR <- nrow(training.set)
   
@@ -204,13 +208,13 @@ stdf <- function(training.set, subtfpca = NULL, ssensors = 6,
                               DTR = DTR, Y = YTR, XTR = XTR, 
                               subsetStatic = subsetStatic,
                               PhiTime = Phi.est[match(training.set[ ,2], TOTAL.fit),], 
-                              LambEst = lamb.est)
+                              LambEst = lamb.est, nu = nu)
     } else {
       prof.max <- constrOptim(theta0, logProfileCppH, grad = NULL,
                               ui = UI, ci = CI, # Constraints
                               DTR = DTR, Y = YTR, XTR = XTR, 
                               PhiTime = Phi.est[match(training.set[ ,2], TOTAL.fit),], 
-                              LambEst = lamb.est)
+                              LambEst = lamb.est, nu = nu)
     }
   } else {
     if(!homogeneous){
@@ -219,13 +223,13 @@ stdf <- function(training.set, subtfpca = NULL, ssensors = 6,
                               DTR = DTR, Y = YTR, XTR = XTR, 
                               subsetStatic = subsetStatic,
                               PhiTime = Phi.est[match(training.set[ ,2], TOTAL.fit),], 
-                              LambEst = lamb.est)
+                              LambEst = lamb.est, nu = nu)
     } else {
       prof.max <- constrOptim(theta0, logProfileCppH, grad = dlogProfileCppH,
                               ui = UI, ci = CI, # Constraints
                               DTR = DTR, Y = YTR, XTR = XTR, 
                               PhiTime = Phi.est[match(training.set[ ,2], TOTAL.fit),], 
-                              LambEst = lamb.est)
+                              LambEst = lamb.est, nu = nu)
     }
   } 
   
