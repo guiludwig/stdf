@@ -9,7 +9,7 @@ Imports:
 LinkingTo: Rcpp, RcppEigen
 Type: Package
 Title: Spatio-Temporal Data Fusion Model
-Version: 0.3.0
+Version: 0.3.1
 Author: Guilherme Ludwig [aut, cre],
     Tingjin Chu [aut]
 Maintainer: Guilherme Ludwig <gvludwig@stat.wisc.edu>

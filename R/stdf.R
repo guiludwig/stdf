@@ -24,6 +24,11 @@
 #'                (see \code{\link{tfpca}} function). Defaults to 20. 
 #' @param homogeneous Whether the variance of static and roving sensors is 
 #'                    assumed to be the same or not. Defaults to FALSE.
+#' @param matern.nu Smoothness parameter for the Matern covariance
+#'                  function. If set to 0.5, uses exponential function. 
+#'                  Values greater than 10 use the gaussian covariance
+#'                  function. Both are computationally faster than
+#'                  the Matern covariance.
 #' @param verbose Whether \code{stdf} prints a message when the optimization 
 #'                step is done. Defaults to \code{TRUE}.
 #' @param method Either "L-BFGS-B" or "Nelder-Mead", which are passed to the 

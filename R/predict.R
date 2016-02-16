@@ -82,7 +82,7 @@ predict.stdf <- function(object, newdata = NULL,
       temp.XTR <- solve(psi.cov, XTR)
       SE <- crossprod(psi.krig, solve(psi.cov, psi.krig)) + 
         (XTE - crossprod(psi.krig, temp.XTR))%*%solve(t(XTR)%*%temp.XTR, t(XTE - crossprod(psi.krig, temp.XTR)))
-      ret$se.fit <- diag(SE)
+      ret$se.fit <- sqrt(diag(SE))
     }
   } else if(what == "loadings"){
     # Evaluate loadings
