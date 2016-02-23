@@ -64,12 +64,18 @@ predict.stdf <- function(object, newdata = NULL,
     for(i in 1:nTR) {
       DKrig[i,] <- sqrt((training.set[i,3] - prediction.set[,3])^2 + (training.set[i,4] - prediction.set[,4])^2)
     }
+    DTE <- matrix(0, nrow = nTS, ncol = nTS)        
+    for(i in 1:nTS) {
+      DTE[i,] <- sqrt((prediction.set[i,3] - prediction.set[,3])^2 + (prediction.set[i,4] - prediction.set[,4])^2)
+    }
 
     Phi.estTE <- with(tfpca.params, fda::eval.fd(t.pred, harmfd)*t(matrix(sqrt(nObs/etan), L, length(t.pred))))
     PhiTimeTE <- Phi.estTE[match(prediction.set[ ,2], t.pred), ]
     psi.krig <- evalPsi(DKrig, L, lamb.est, theta, PhiTime, PhiTimeTE,
                         object$homogeneous, subsetStatic, kriging = TRUE)
-
+    var.krig <- evalPsi(DTE, L, lamb.est, theta, PhiTimeTE, PhiTimeTE,
+                        object$homogeneous, subsetStatic, kriging = TRUE)
+    
     XTE <- cbind(1, prediction.set[,3:4], splines:::predict.bs(splines::bs(training.set[ ,2], df = object$spline.df), prediction.set[ ,2]))
     YKrig <- as.numeric(XTE%*%beta.est+crossprod(psi.krig, solve(psi.cov, object$resid)))
     MSPEKrig <- mean((prediction.set[,1]-YKrig)^2)
@@ -79,10 +85,26 @@ predict.stdf <- function(object, newdata = NULL,
       XTR <- cbind(1, object$training.set[ ,3:4], 
                    splines::bs(object$training.set[ ,2], df = object$spline.df))
       # Is this right?
-      temp.XTR <- solve(psi.cov, XTR)
-      SE <- crossprod(psi.krig, solve(psi.cov, psi.krig)) + 
-        (XTE - crossprod(psi.krig, temp.XTR))%*%solve(t(XTR)%*%temp.XTR, t(XTE - crossprod(psi.krig, temp.XTR)))
+      temp.XTR <- solve(psi.cov, XTR) # Cz^{-1}X in C&W, p148
+      # c'Cz^{-1}c + (x_0 - X'Cz^{-1}c)'(X'Cz^{-1}X)^{-1}(x_0 - X'Cz^{-1}c)
+      # cat("temp.XTR = ", dim(temp.XTR), "\n")
+      # cat("psi.krig = ", dim(psi.krig), "\n")
+      # cat("psi.cov  = ", dim(psi.cov), "\n")
+      # cat("     XTR = ", dim(XTR), "\n")
+      # cat("     XTE = ", dim(XTE), "\n")
+      # cat("   X'SX  = ", dim(crossprod(temp.XTR, XTR)), "\n")
+      # cat("   c  = ", dim(t(XTE - crossprod(psi.krig, temp.XTR))), "\n")
+      SE <- var.krig - crossprod(psi.krig, solve(psi.cov, psi.krig)) +
+        (XTE - crossprod(psi.krig, temp.XTR))%*%solve(crossprod(temp.XTR, XTR),
+                                                      t(XTE - crossprod(psi.krig, temp.XTR)))
       ret$se.fit <- sqrt(diag(SE))
+      # SE <- numeric(nrow(XTE))
+      # TEMP <- solve(crossprod(temp.XTR, XTR))
+      # for(i in 1:nrow(XTE)){
+      #   SE[i] <- as.numeric(crossprod(psi.krig[ , i, drop=FALSE], solve(psi.cov, psi.krig[ , i, drop=FALSE])) +
+      #                                   t(XTE[i,] - crossprod(XTR, solve(psi.cov,psi.krig[ , i, drop=FALSE])))%*%TEMP%*%(XTE[i,] - crossprod(XTR, solve(psi.cov,psi.krig[ , i, drop=FALSE]))))
+      # }
+      # ret$se.fit <- sqrt(SE)
     }
   } else if(what == "loadings"){
     # Evaluate loadings
